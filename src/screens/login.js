@@ -42,7 +42,7 @@ export default function LoginScreen({ navigation }) {
                 }
                 else{
                     await AsyncStorage.setItem("userToken", data.token)
-                    navigation.replace("Dashboard", {customer: data.customer})
+                    navigation.replace("Dashboard", {user: data.user})
                 }
             })
             .catch(error => {
