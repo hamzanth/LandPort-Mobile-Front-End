@@ -14,7 +14,7 @@ export default function LoginScreen({ navigation }) {
     const [ passwordError, setPasswordError ] = useState(null)
     // const navigation = useNavigation()
 
-    const handleLogin = () => {
+    const handleLogin = async () => {
         // Alert.alert("Login", `username: ${name}, password: ${password}`, [
         //     {text: "proceed"},
         //     {text: "cancel"}
@@ -25,7 +25,7 @@ export default function LoginScreen({ navigation }) {
             if(password.length === 0) setPasswordError("password is required to login")
         }
         else{
-            fetch("http://192.168.43.207:3000/users/login", {
+            await fetch("http://192.168.43.207:3000/users/login", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json"
@@ -35,14 +35,13 @@ export default function LoginScreen({ navigation }) {
             .then(resp => resp.json())
             .then(async (data) => {
                 // const storage = new MMKV()
-                // console.log(data.token)
-                if (data.error){
-                    console.log(error)
-                    alert("You dont have an account. Register to use the app")
-                }
-                else{
+                console.log(data.error)
+                if (data.token){
                     await AsyncStorage.setItem("userToken", data.token)
                     navigation.replace("Dashboard", {user: data.user})
+                }
+                else{
+                    alert("You dont have an account. Register to use the app")
                 }
             })
             .catch(error => {

@@ -27,23 +27,7 @@ export default function DashboardHomeRoute({ customer }){
             const data = await AsyncStorage.getItem("userToken")
             try{
                 const decData = jwtDecode(data)
-                await fetch("http://192.168.43.207:3000/users/" + decData.id, {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json"
-                    },
-                    body: JSON.stringify({
-                        senderName: senderName,
-                        senderLocation: senderLocation,
-                        senderPhoneNumber: senderPhoneNumber,
-                        receiverName: recieverName,
-                        receiverLocation: recieverLocation,
-                        receiverPhoneNumber: recieverPhoneNumber,
-                        productName: productName,
-                        productQuantity: productQuantity,
-                        productImage: productImage
-                    })
-                })
+                await fetch("http://192.168.43.207:3000/users/" + decData.id)
                 .then(resp => resp.json())
                 .then(data => {
                     setUser(data.user)
@@ -61,7 +45,23 @@ export default function DashboardHomeRoute({ customer }){
 
     }, [])
     const handleMakeRequest = async () => {
-        await fetch("http://192.168.43.207:3000/transactions/" + user._id + "/make-request")
+        await fetch("http://192.168.43.207:3000/transactions/" + user._id + "/make-request", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                senderName: senderName,
+                senderLocation: senderLocation,
+                senderPhoneNumber: senderPhoneNumber,
+                receiverName: recieverName,
+                receiverLocation: recieverLocation,
+                receiverPhoneNumber: recieverPhoneNumber,
+                productName: productName,
+                productQuantity: productQuantity,
+                productImage: productImage
+            })
+        })
         .then(resp => resp.json())
         .then(data => {
             console.log(data.request)
@@ -227,6 +227,21 @@ export default function DashboardHomeRoute({ customer }){
                             >
                                 make request
                             </Button>
+                            <View>
+                                {user.requests.length !== 0 && (
+                                    <View>
+                                        <Text>Your Recent Requests</Text>
+                                        {user.requests.map(req => (
+                                            <View key={req._id} style={styles.requestStyle}>
+                                                <Text>{req.date}</Text>
+                                                <Text>Sender {req.sender.name}</Text>
+                                                <Text>Receiver {req.recipient.name}</Text>
+                                                <Text>Product {req.product.name}</Text>
+                                            </View>
+                                        ))}
+                                    </View>
+                                )}
+                            </View>
                         </View>  
                     )}
                 </View>
@@ -276,5 +291,8 @@ const styles = StyleSheet.create({
     mfinal: {
         borderRadius: 3,
         marginTop: 13
+    },
+    requestStyle: {
+        // flexDirection: "row"
     }
 })
