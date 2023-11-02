@@ -38,7 +38,16 @@ export default function LoginScreen({ navigation }) {
                 console.log(data.error)
                 if (data.token){
                     await AsyncStorage.setItem("userToken", data.token)
-                    navigation.replace("Dashboard", {user: data.user})
+                    if (data.user.role === "customer"){
+                        navigation.replace("CustomerDashboard", {user: data.user})
+                    }
+                    else if (data.user.role === "lmis"){
+                        navigation.replace("LmisDashboard", {user: data.user})
+                    }
+                    else{
+                        // navigation.replace("LmisDashboard", {user: data.user})
+                        alert("Dont know which category you are in")
+                    }
                 }
                 else{
                     alert("You dont have an account. Register to use the app")

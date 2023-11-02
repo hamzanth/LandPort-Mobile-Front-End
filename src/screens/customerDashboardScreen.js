@@ -1,17 +1,19 @@
 import React, { useState, useEffect } from 'react'
 import { StyleSheet, View} from 'react-native'
-import { Text } from 'react-native-paper'
 import jwtDecode from 'jwt-decode'
 import AsyncStorage from '@react-native-async-storage/async-storage'
-import {Provider as PaperProvider, BottomNavigation} from 'react-native-paper'
-import DashboardFavouritesRoute from './dashboardFavourites'
-import DashboardHomeRoute from './dashboardHome'
-import DashboardProfileRoute from './dashboardProfile'
-import DashboardSearchRoute from './dashboardSearch'
+import {Provider as PaperProvider, BottomNavigation, Text} from 'react-native-paper'
+import DashboardFavouritesRoute from './customerTabScreens/dashboardFavourites'
+import DashboardHomeRoute from './customerTabScreens/dashboardHome'
+import DashboardProfileRoute from './customerTabScreens/dashboardProfile'
+import DashboardSearchRoute from './customerTabScreens/dashboardSearch'
+import { ActivityIndicator } from 'react-native-paper'
 
-export default function Dashboard({route, navigation}){
+export default function CustomerDashboard({route, navigation}){
     const [index, setIndex] = useState(0)
     const [decodedData, setDecodedData ]= useState(null)
+    const [ user, setUser ] = useState(null)
+    const [ loading, setLoading ] = useState(true)
     // const {customer} = route.params
 
     useEffect(() => {
@@ -19,13 +21,20 @@ export default function Dashboard({route, navigation}){
             const data = await AsyncStorage.getItem("userToken")
             // console.log(data)
             try{
-                // console.log(data)
                 const decData = jwtDecode(data)
-                // console.log(decData)
-                setDecodedData(decData)
+                await fetch("http://192.168.43.207:3000/users/" + decData.id)
+                .then(resp => resp.json())
+                .then(data => {
+                    setUser(data.user)
+                    console.log(data.user)
+                    setLoading(false)
+                })
+                .catch(error => {
+                    console.log(error)
+                })
             }
             catch(error){
-                alert(error)
+                console.log("something went wrong")
             }
         }
         fetchData()
@@ -38,19 +47,25 @@ export default function Dashboard({route, navigation}){
         {key: "profile", title: "Profile", focusedIcon: "account"},
     ])
     const renderScene = BottomNavigation.SceneMap({
-        home: DashboardHomeRoute,
-        search: DashboardSearchRoute,
-        favourites: DashboardFavouritesRoute,
-        profile: DashboardProfileRoute
+        home: (props) => <DashboardHomeRoute {...props} usr={user} />,
+        search: (props) => <DashboardSearchRoute {...props} usr={user} />,
+        favourites: (props) => <DashboardFavouritesRoute {...props} usr={user} />,
+        profile: (props) => <DashboardProfileRoute {...props} usr={user} />
     })
     
     return (
         <PaperProvider>
-            <BottomNavigation 
-                navigationState={{index, routes}}
-                onIndexChange={setIndex}
-                renderScene={renderScene}
-            />
+            {loading ? (
+                <View style={{flex: 1, justifyContent: "center", alignItems:"center", backgroundColor: "teal"}}>
+                    <ActivityIndicator size="large" color="white" animating={true} />
+                </View>
+            ): (
+                <BottomNavigation 
+                    navigationState={{index, routes}}
+                    onIndexChange={setIndex}
+                    renderScene={renderScene}
+                />
+            ) }
         </PaperProvider>
     )
 }

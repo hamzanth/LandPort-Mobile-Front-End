@@ -4,10 +4,10 @@ import { Modal, Portal, PaperProvider, Text, Button, TextInput, IconButton, MD3C
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import jwtDecode from 'jwt-decode'
 
-export default function DashboardHomeRoute({ customer }){
+export default function DashboardHomeRoute({ usr }){
     // console.log(customer)
     const [ user, setUser ] = useState(null)
-    const [ loading, setLoading ] = useState(true)
+    const [ loading, setLoading ] = useState(false)
     const [ buttonLoading, setButtonLoading ] = useState(false)
     const [ visible, setVisible ] = useState(false)
     const [ selectedForm, setSelectedForm ] = useState(0)
@@ -22,30 +22,30 @@ export default function DashboardHomeRoute({ customer }){
     const [ productImage, setProductImage ] = useState("")
     const [ request, setRequest ] = useState({})
 
-    useEffect(() => {
-        const fetchData = async () => {
-            const data = await AsyncStorage.getItem("userToken")
-            try{
-                const decData = jwtDecode(data)
-                await fetch("http://192.168.43.207:3000/users/" + decData.id)
-                .then(resp => resp.json())
-                .then(data => {
-                    setUser(data.user)
-                    setLoading(false)
-                })
-                .catch(error => {
-                    console.log(error)
-                })
-            }
-            catch(error){
-                console.log("something went wrong")
-            }
-        }
-        fetchData()
+    // useEffect(() => {
+    //     const fetchData = async () => {
+    //         const data = await AsyncStorage.getItem("userToken")
+    //         try{
+    //             const decData = jwtDecode(data)
+    //             await fetch("http://192.168.43.207:3000/users/" + decData.id)
+    //             .then(resp => resp.json())
+    //             .then(data => {
+    //                 setUser(data.user)
+    //                 setLoading(false)
+    //             })
+    //             .catch(error => {
+    //                 console.log(error)
+    //             })
+    //         }
+    //         catch(error){
+    //             console.log("something went wrong")
+    //         }
+    //     }
+    //     fetchData()
 
-    }, [])
+    // }, [])
     const handleMakeRequest = async () => {
-        await fetch("http://192.168.43.207:3000/transactions/" + user._id + "/make-request", {
+        await fetch("http://192.168.43.207:3000/transactions/" + usr._id + "/make-request", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json"
@@ -216,7 +216,7 @@ export default function DashboardHomeRoute({ customer }){
                                     </View>
                                 </Modal>
                             </Portal>
-                            <Text variant="headlineMedium" style={styles.header}>Welcome {user && user.name}</Text>
+                            <Text variant="headlineMedium" style={styles.header}>Welcome {usr && usr.name}</Text>
                             <Button
                                 textColor="black"
                                 buttonColor="white"
@@ -227,21 +227,6 @@ export default function DashboardHomeRoute({ customer }){
                             >
                                 make request
                             </Button>
-                            <View>
-                                {user.requests.length !== 0 && (
-                                    <View>
-                                        <Text>Your Recent Requests</Text>
-                                        {user.requests.map(req => (
-                                            <View key={req._id} style={styles.requestStyle}>
-                                                <Text>{req.date}</Text>
-                                                <Text>Sender {req.sender.name}</Text>
-                                                <Text>Receiver {req.recipient.name}</Text>
-                                                <Text>Product {req.product.name}</Text>
-                                            </View>
-                                        ))}
-                                    </View>
-                                )}
-                            </View>
                         </View>  
                     )}
                 </View>

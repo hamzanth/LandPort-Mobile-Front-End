@@ -32,7 +32,7 @@ export default function RegisterScreen({navigation}){
             console.log(data)
             await AsyncStorage.setItem("userToken", data.token)
             setLoading(false)
-            navigation.replace("Dashboard")
+            navigation.replace("CustomerDashboard")
         }) 
         .catch(error => alert(error))
     }

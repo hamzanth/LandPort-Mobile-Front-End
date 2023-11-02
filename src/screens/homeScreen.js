@@ -4,6 +4,7 @@ import { StyleSheet, Text, View, SafeAreaView, TouchableOpacity, Image } from 'r
 import Ionicons from '@expo/vector-icons/Ionicons'
 import { MaterialCommunityIcons } from '@expo/vector-icons'
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import jwtDecode from 'jwt-decode';
 
 
 export default function HomeScreen({ navigation }) {
@@ -12,7 +13,21 @@ export default function HomeScreen({ navigation }) {
     // console.log("Custom Button Pressed")
     const token = await AsyncStorage.getItem("userToken")
     if (token){
-      navigation.navigate("Dashboard")
+      try{
+        const decData = jwtDecode(token)
+        if (decData.role === "customer"){
+          navigation.navigate("CustomerDashboard")
+        }
+        else if (decData.role === "lmis"){
+          navigation.navigate("LmisDashboard")
+        }
+        else{
+          alert("Really dont know which category you are in")
+        }
+      }
+      catch(error){
+        console.log("Something went wrong")
+      }
     }
     else{
       navigation.push('Login')
