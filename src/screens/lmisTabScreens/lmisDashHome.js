@@ -11,7 +11,7 @@ export default function LmisDashHome(){
     const [ selectedRequest, setSelectedRequest ] = useState({})
     useEffect(() => {
         const fetchData = async () => {
-            await fetch("http://192.168.43.207:3000/transactions/requests")
+            await fetch("http://192.168.43.207:3000/transactions/unapproved-requests")
             .then(resp => resp.json())
             .then(data => {
                 console.log(data.requests)
@@ -100,10 +100,10 @@ export default function LmisDashHome(){
                                             data={riders}
                                             renderItem={({item}) => (
                                                 <View style={styles.ridersViewStyle}>
-                                                        <TouchableOpacity style={styles.ridersTextStyle} onPress={() => handleRiderPress(item)}>
-                                                            <Text style={{textAlign: "center", paddingVertical: 10}}>{item.name} (#{item.priceCharged})</Text>
-                                                        </TouchableOpacity>
-                                                    </View>
+                                                    <TouchableOpacity style={styles.ridersTextStyle} onPress={() => handleRiderPress(item)}>
+                                                        <Text style={{textAlign: "center", paddingVertical: 10}}>{item.name} (#{item.priceCharged})</Text>
+                                                    </TouchableOpacity>
+                                                </View>
                                             )}
                                         />
                                     </View>
@@ -112,22 +112,26 @@ export default function LmisDashHome(){
                         </View>
                     </Modal>
                     <Text variant="headlineMedium" style={{textAlign: "center", marginVertical: 11, color: "white"}}>Recent Requests</Text>
-                    <FlatList 
-                        keyExtractor={(item) => item._id}
-                        data={requests}
-                        renderItem={({item}) => (
-                            <View style={styles.ridersViewStyle}>
-                                <TouchableOpacity>
-                                    <Text 
-                                        style={styles.listStyle}
-                                        onPress={() => handleModalOpen(item)} 
-                                    >
-                                        {`${item.sender.name} => ${item.recipient.name} (${item.product.name})`}
-                                    </Text>
-                                </TouchableOpacity>
-                            </View>
-                        )}
-                    />
+                    {requests.length === 0 ? (
+                        <Text variant="bodyLarge" style={{color: "white"}}>There are no request for now</Text>
+                    ) : (
+                        <FlatList 
+                            keyExtractor={(item) => item._id}
+                            data={requests}
+                            renderItem={({item}) => (
+                                <View style={styles.ridersViewStyle}>
+                                    <TouchableOpacity>
+                                        <Text 
+                                            style={styles.listStyle}
+                                            onPress={() => handleModalOpen(item)} 
+                                        >
+                                            {`${item.sender.name} => ${item.recipient.name} (${item.product.name})`}
+                                        </Text>
+                                    </TouchableOpacity>
+                                </View>
+                            )}
+                        />
+                    )}
                 </View>
             )}
         </View>

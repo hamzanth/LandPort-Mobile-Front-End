@@ -37,12 +37,16 @@ export default function LoginScreen({ navigation }) {
                 // const storage = new MMKV()
                 console.log(data.error)
                 if (data.token){
+                    console.log(data.user.token)
                     await AsyncStorage.setItem("userToken", data.token)
                     if (data.user.role === "customer"){
                         navigation.replace("CustomerDashboard", {user: data.user})
                     }
                     else if (data.user.role === "lmis"){
                         navigation.replace("LmisDashboard", {user: data.user})
+                    }
+                    else if (data.user.role === "rider"){
+                        navigation.replace("RidersDashboard", {user: data.user})
                     }
                     else{
                         // navigation.replace("LmisDashboard", {user: data.user})

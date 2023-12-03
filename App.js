@@ -10,6 +10,7 @@ import LoginScreen from './src/screens/login'
 import RegisterScreen from './src/screens/register'
 import customerDashboard from './src/screens/customerDashboardScreen'
 import LmisDashboard from './src/screens/lmisDashboardScreen'
+import RidersDashboard from './src/screens/ridersDashboardScreen'
 
 const Stack = createStackNavigator()
 
@@ -27,6 +28,7 @@ function StackNavigator(){
       <Stack.Screen name="Register" component={RegisterScreen} />
       <Stack.Screen name="CustomerDashboard" component={customerDashboard} />
       <Stack.Screen name="LmisDashboard" component={LmisDashboard} />
+      <Stack.Screen name="RidersDashboard" component={RidersDashboard} />
     </Stack.Navigator>
   )
 }

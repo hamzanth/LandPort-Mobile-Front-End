@@ -1,16 +1,17 @@
 import React, { useState, useEffect } from 'react'
 import { StyleSheet, View } from 'react-native'
-import { PaperProvider, BottomNavigation, Text } from 'react-native-paper'
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import jwtDecode from 'jwt-decode'
-import AsyncStorage from '@react-native-async-storage/async-storage'
-import LmisDashHome from './lmisTabScreens/lmisDashHome'
-import LmisDashTrans from './lmisTabScreens/lmisDashTrans'
-import LmisDashProfile from './lmisTabScreens/lmisDashProfile'
+import { PaperProvider, BottomNavigation, Text } from 'react-native-paper'
+import RidersDashHome from './ridersTabScreens/ridersDashHome'
+import RidersDashTrans from './ridersTabScreens/ridersDashTrans'
+import RidersDashProfile from './ridersTabScreens/ridersDashProfile'
 
-export default function LmisDashboard(){
-    const [ index, setIndex ] = useState(0)
+
+export default function RidersDashboard (){
     const [ user, setUser ] = useState(null)
     const [ loading, setLoading ] = useState(true)
+    const [ index, setIndex ] = useState(0)
     const [ routes, setRoutes ] = useState([
         {key: "home", title: "Home", focusedIcon: "home"},
         {key: "transaction", title: "Transactions", focusedIcon: "history"},
@@ -25,23 +26,24 @@ export default function LmisDashboard(){
                 await fetch("http://192.168.43.207:3000/users/" + decData.id)
                 .then(resp => resp.json())
                 .then(data => {
-                    // console.log(data.user)
                     setUser(data.user)
                     setLoading(false)
                 })
-                .catch(error => console.log(error))
+                .catch(error => {
+                    console.log(error)
+                })
             }
             catch(error){
-                console.log(error)
+                console.log("Something Went Wrong")
             }
         }
         fetchData()
     }, [])
 
     const renderScene = BottomNavigation.SceneMap({
-        home: (props) => <LmisDashHome {...props} user={user} />,
-        transaction: (props) => <LmisDashTrans {...props} user={user} />,
-        profile: (props) => <LmisDashProfile {...props} user={user} />
+        home: (props) => <RidersDashHome {...props} user={user} />,
+        profile: (props) => <RidersDashProfile {...props} user={user} />,
+        transaction: (props) => <RidersDashTrans {...props} user={user} />,
     })
 
     return (
@@ -59,5 +61,4 @@ export default function LmisDashboard(){
             )}
         </PaperProvider>
     )
-
 }

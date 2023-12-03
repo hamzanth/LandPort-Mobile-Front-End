@@ -12,14 +12,19 @@ export default function HomeScreen({ navigation }) {
   const handlePress = async () => {
     // console.log("Custom Button Pressed")
     const token = await AsyncStorage.getItem("userToken")
+    // console.log(token)
     if (token){
       try{
         const decData = jwtDecode(token)
+        // console.log(decData)
         if (decData.role === "customer"){
           navigation.navigate("CustomerDashboard")
         }
         else if (decData.role === "lmis"){
           navigation.navigate("LmisDashboard")
+        }
+        else if (decData.role === "rider"){
+          navigation.navigate("RidersDashboard")
         }
         else{
           alert("Really dont know which category you are in")

@@ -26,7 +26,7 @@ export default function CustomerDashboard({route, navigation}){
                 .then(resp => resp.json())
                 .then(data => {
                     setUser(data.user)
-                    console.log(data.user)
+                    // console.log(data.user)
                     setLoading(false)
                 })
                 .catch(error => {

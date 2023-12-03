@@ -36,7 +36,8 @@ const styles = StyleSheet.create({
         paddingTop: 30
     },
     logoutBtn: {
-        width: 150
+        width: 150,
+        marginTop: 19
     }
 
 })

@@ -1,11 +1,23 @@
 import React, { useState, useEffect } from 'react'
-import { View, StyleSheet, ActivityIndicator } from 'react-native'
-import { Modal, Portal, PaperProvider, Text, Button, TextInput, IconButton, MD3Colors } from 'react-native-paper'
+import { View, StyleSheet, ActivityIndicator, FlatList, TouchableOpacity, Dimensions, Modal } from 'react-native'
+import { Portal, PaperProvider, Text, Button, TextInput, IconButton, MD3Colors } from 'react-native-paper'
+import moment from 'moment'
+import MapView, {Marker, Callout} from 'react-native-maps'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import jwtDecode from 'jwt-decode'
+import * as Location from 'expo-location'
 
 export default function DashboardHomeRoute({ usr }){
     // console.log(customer)
+
+    // const pinCoords = {
+    //     latitude: 37.78825,
+    //     longitude: -122.4324,
+    // }
+
+    const [ pin, setPin ] = useState({})
+    const [ userLocation , setUserLocation ] = useState({})
+    const [ mapRegion, setMapRegion ] = useState({})
     const [ user, setUser ] = useState(null)
     const [ loading, setLoading ] = useState(false)
     const [ buttonLoading, setButtonLoading ] = useState(false)
@@ -21,9 +33,39 @@ export default function DashboardHomeRoute({ usr }){
     const [ productQuantity, setProductQuantity ] = useState("")
     const [ productImage, setProductImage ] = useState("")
     const [ request, setRequest ] = useState({})
+    const [ showTransDetail, setShowTransDetail ] = useState(false)
+    const [ selectedTrans, setSelectedTrans ] = useState({})
+    const [ modalVisible, setModalVisible ] = useState(false)
+    const [ isMapReady, setIsMapReady ] = useState(false)
+    const [ locationAccess, setLocationAccess ] = useState(false)
 
-    // useEffect(() => {
-    //     const fetchData = async () => {
+    const initialRegion = {
+        latitude: 37.78825,
+        longitude: -122.4324,
+        latitudeDelta: 0.0922,
+        longitudeDelta: 0.0421
+    }
+
+    useEffect(() => {
+        const fetchData = async () => {
+            const { status } = await Location.requestForegroundPermissionsAsync()
+            if ( status !== "granted"){
+                setLocationAccess(false)
+                console.log("location not granted. Please enable your location in your settings")
+            }
+            else{
+                setLocationAccess(true)
+                const currLocation = await Location.getCurrentPositionAsync()
+                setMapRegion({
+                    latitude: currLocation.coords.latitude,
+                    longitude: currLocation.coords.longitude,
+                    latitudeDelta: 0.0922,
+                    longitudeDelta: 0.0421
+                })
+                setUserLocation({latitude: currLocation.coords.latitude, longitude: currLocation.coords.longitude})
+                setPin({latitude: currLocation.coords.latitude, longitude: currLocation.coords.longitude})
+                // console.log(currLocation)
+            }
     //         const data = await AsyncStorage.getItem("userToken")
     //         try{
     //             const decData = jwtDecode(data)
@@ -40,10 +82,41 @@ export default function DashboardHomeRoute({ usr }){
     //         catch(error){
     //             console.log("something went wrong")
     //         }
-    //     }
-    //     fetchData()
+        }
+        fetchData()
 
-    // }, [])
+    }, [])
+
+    const calculateDistance = (userCoords, recvCoords) => {
+        const toRadian = n => (n * Math.PI) / 180
+        const R = 6371
+        const lat2 = recvCoords.latitude
+        const lon2 = recvCoords.longitude
+        const lat1 = userCoords.latitude
+        const lon1 = userCoords.longitude
+        const x1 = lat2 - lat1
+        const dLat = toRadian(x1)
+        const x2 = lon2 - lon1
+        const dLon = toRadian(x2)
+        const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) + Math.cos(toRadian(lat1)) * Math.cos(toRadian(lat2)) * Math.sin(dLon / 2) * Math.sin(dLon / 2)
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
+        const d = R * c
+        return d
+    }
+
+    const handleAnotherRequest = async () => {
+        console.log("we are here")
+        console.log(userLocation)
+        console.log(pin)
+        // setPin(userLocation)
+
+        const distance = calculateDistance(userLocation, pin)
+        console.log(`The distance is ${distance} km`)
+
+        setVisible(false)
+        setSelectedForm(0)
+    }
+
     const handleMakeRequest = async () => {
         await fetch("http://192.168.43.207:3000/transactions/" + usr._id + "/make-request", {
             method: "POST",
@@ -94,8 +167,45 @@ export default function DashboardHomeRoute({ usr }){
         setSelectedForm(0)
         setVisible(false)
     }
+    const handleTransDetails = (trans) => {
+        setSelectedTrans(trans)
+        setShowTransDetail(true)
+    }
+    const handleTransDetailClose = () => {
+        setSelectedTrans({})
+        setShowTransDetail(false)
+    }
+    const onMapLayout = () => {
+        setIsMapReady(true)
+    }
+    const handleModalClose = () => {
+        setVisible(false)
+    }
     return(
         <PaperProvider>
+            {showTransDetail && (
+                <View style={styles.transModal}>
+                    <IconButton 
+                        icon="close"
+                        rippleColor="#4caf50"
+                        size={30}
+                        iconColor="white"
+                        containerColor="red"
+                        style={{alignSelf:"center", marginTop: 15}}
+                        onPress={handleTransDetailClose}
+                    />
+                    <View>
+                        <Text variant="headlineLarge" style={{textAlign: "center", marginBottom: 10}}>{selectedTrans.refNumber}</Text>
+                        <Text variant="bodyLarge" style={{textAlign: "center", marginBottom: 10}}>Date: {moment(selectedTrans.dateCreated).calendar()} ({moment(selectedTrans.dateCreated).fromNow()})</Text>
+                        <Text variant="bodyLarge" style={{textAlign: "center", marginBottom: 10}}>Completed: {selectedTrans.completed ? "True" : "False"} </Text>
+                        <Text variant="bodyLarge" style={{textAlign: "center", marginBottom: 10}}>Transaction Cost: #{selectedTrans.transactionCost}</Text>
+                        <Text variant="bodyLarge" style={{textAlign: "center", marginBottom: 10}}>Sender: {selectedTrans.customer.name} (0{selectedTrans.customer.phoneNumber})</Text>
+                        <Text variant="bodyLarge" style={{textAlign: "center", marginBottom: 10}}>Reciever: {selectedTrans.request.recipient.name} (0{selectedTrans.request.recipient.phoneNumber})</Text>
+                        <Text variant="bodyLarge" style={{textAlign: "center", marginBottom: 10}}>Rider's Company: {selectedTrans.riderCompany.name}</Text>
+                        
+                    </View>
+                </View>
+            )}
             <View style={[styles.container, {justifyContent: loading ? "center" : "flex-start"}]}>
                     {loading ? (
                         <View>
@@ -106,14 +216,23 @@ export default function DashboardHomeRoute({ usr }){
                             <Portal>
                                 <Modal 
                                     visible={visible} 
-                                    onDismiss={handleDismiss}
-                                    dismissableBackButton={true}
-                                    style={styles.modalStyles}
+                                    // onDismiss={handleDismiss}
+                                    // dismissableBackButton={true}
+                                    // style={styles.modalStyles}
                                 >
-                                    <Text variant="bodyLarge" style={{textAlign: "center", marginTop: 10}}>Request Form</Text>
-                                    <View style={{display: selectedForm === 0 ? "flex" : "none", marginHorizontal: 15}}>
-                                        <Text variant="labelMedium" style={{textAlign: "center", marginVertical: 16}}>Enter your(sender) Details</Text>
-                                        <TextInput
+                                    <View style={{display: selectedForm === 0 ? "flex" : "none"}}>
+                                    <Text variant="bodyLarge" style={{textAlign: "center", marginTop: 10}}>Select Receiver's Location</Text>
+                                    <IconButton 
+                                        icon="close"
+                                        rippleColor="#4caf50"
+                                        size={30}
+                                        iconColor="white"
+                                        containerColor="red"
+                                        style={{alignSelf:"center", top: 15, right: 7, position: "absolute", zIndex: 70}}
+                                        onPress={handleModalClose}
+                                    />
+                                    {/* <Text variant="labelMedium" style={{textAlign: "center", marginVertical: 16}}>Enter your(sender) Details</Text> */}
+                                        {/* <TextInput
                                             style={styles.inputStyle} 
                                             mode="outlined"
                                             label="Sender Name"
@@ -134,11 +253,28 @@ export default function DashboardHomeRoute({ usr }){
                                             value={senderPhoneNumber}
                                             keyboardType="numeric"
                                             onChangeText={setSenderPhoneNumber}
-                                        />
+                                        /> */}
+                                        <MapView 
+                                            style={styles.map} 
+                                            initialRegion={mapRegion}
+                                            provider="google"
+                                            onMapReady={onMapLayout}
+                                            showUserLocation={true}
+                                        >
+                                            <Marker 
+                                                coordinate={pin}
+                                                draggable={true}
+                                                onDragStart={(e) => console.log("Drag start " + e.nativeEvent.coordinate)}
+                                                onDragEnd={(e) => {
+                                                    setPin({latitude: e.nativeEvent.coordinate.latitude, longitude: e.nativeEvent.coordinate.longitude})
+                                                    setSelectedForm(2)
+                                                }}
+                                            />
+                                        </MapView>
                                     </View>
                                     <View style={{display: selectedForm === 1 ? "flex" : "none", marginHorizontal: 15,}}>
                                         <Text variant="labelMedium" style={{textAlign: "center", marginVertical: 16}}>Enter receiver Details</Text>
-                                        <TextInput
+                                        {/* <TextInput
                                             style={styles.inputStyle} 
                                             mode="outlined"
                                             label="Reciever Name"
@@ -159,10 +295,34 @@ export default function DashboardHomeRoute({ usr }){
                                             value={recieverPhoneNumber}
                                             keyboardType="numeric"
                                             onChangeText={setRecieverPhoneNumber}
-                                        />
+                                        /> */}
+                                        {/* <MapView 
+                                            style={styles.map} 
+                                            initialRegion={initialRegion}
+                                            provider="google"
+                                        >
+                                            <Marker 
+                                                coordinate={pinCoords}
+                                                draggable={true}
+                                                onDragStart={(e) => console.log("Drag start " + e.nativeEvent.coordinate)}
+                                                onDragEnd={(e) => {
+                                                    setPin({latitude: e.nativeEvent.coordinate.latitude, longitude: e.nativeEvent.coordinate.longitude})
+                                                }}
+                                            />
+                                        </MapView> */}
+
                                     </View>
-                                    <View style={{display: selectedForm === 2 ? "flex" : "none", marginHorizontal: 15}}>
+                                    <View style={{display: selectedForm === 2 ? "flex" : "none", marginHorizontal: 15, paddingTop: 50}}>
                                         <Text variant="labelMedium" style={{textAlign: "center", marginVertical: 16}}>Enter Product Details</Text>
+                                        <IconButton 
+                                            icon="close"
+                                            rippleColor="#4caf50"
+                                            size={30}
+                                            iconColor="white"
+                                            containerColor="red"
+                                            style={{alignSelf:"center", top: 15, right: 7, position: "absolute", zIndex: 70}}
+                                            onPress={handleModalClose}
+                                        />
                                         <TextInput
                                             style={styles.inputStyle} 
                                             mode="outlined"
@@ -191,7 +351,7 @@ export default function DashboardHomeRoute({ usr }){
                                             buttonColor="black"
                                             textColor="white"
                                             loading={loading}
-                                            onPress={handleMakeRequest}
+                                            onPress={handleAnotherRequest}
                                         >
                                             make request
                                         </Button>
@@ -227,6 +387,20 @@ export default function DashboardHomeRoute({ usr }){
                             >
                                 make request
                             </Button>
+                            <View style={{position: "absolute", top: 200}}>
+                                <Text variant="headlineLarge" style={{color: "white", textAlign: "center"}}>Recent Links</Text>
+                                <FlatList 
+                                    keyExtractor={(item) => item._id}
+                                    data={usr.transactions}
+                                    renderItem={({item}) => (
+                                        <View>
+                                            <TouchableOpacity onPress={() => handleTransDetails(item)}>
+                                                <Text variant="bodyLarge" style={{textAlign: "center", borderColor: "white", borderWidth: 1, marginBottom:3, borderRadius: 5, color: "white"}}>{item.refNumber}</Text>
+                                            </TouchableOpacity>
+                                        </View>
+                                    )}
+                                />
+                            </View>
                         </View>  
                     )}
                 </View>
@@ -262,7 +436,7 @@ const styles = StyleSheet.create({
         paddingVertical: 0,
         paddingHorizontal: 0,
         position: "absolute",
-        top: 190,
+        top: 140,
     },
     inputStyle: {
         marginBottom: 5,
@@ -279,5 +453,17 @@ const styles = StyleSheet.create({
     },
     requestStyle: {
         // flexDirection: "row"
+    },
+    transModal: {
+        position: "absolute",
+        top: "0%",
+        width: "100%",
+        height: "100%",
+        backgroundColor: "white",
+        zIndex: 30,
+    },
+    map: {
+        width: Dimensions.get("window").width,
+        height: Dimensions.get("window").height
     }
 })
