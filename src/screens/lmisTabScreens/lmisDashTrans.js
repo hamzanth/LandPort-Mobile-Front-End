@@ -57,6 +57,7 @@ export default function LmisDashTrans({user}){
                                 <Text variant="headlineLarge" style={{textAlign: "center", marginBottom: 10}}>{selectedTrans.refNumber}</Text>
                                 <Text variant="bodyLarge" style={{textAlign: "center", marginBottom: 10}}>Date: {moment(selectedTrans.dateCreated).calendar()} ({moment(selectedTrans.dateCreated).fromNow()})</Text>
                                 <Text variant="bodyLarge" style={{textAlign: "center", marginBottom: 10}}>Completed: {selectedTrans.completed ? "True" : "False"} </Text>
+                                <Text variant="bodyLarge" style={{textAlign: "center", marginBottom: 10}}>Distance: {selectedTrans.distance.toFixed(2)}KM</Text>
                                 <Text variant="bodyLarge" style={{textAlign: "center", marginBottom: 10}}>Transaction Cost: #{selectedTrans.transactionCost}</Text>
                                 <Text variant="bodyLarge" style={{textAlign: "center", marginBottom: 10}}>Sender: {selectedTrans.customer.name} (0{selectedTrans.customer.phoneNumber})</Text>
                                 <Text variant="bodyLarge" style={{textAlign: "center", marginBottom: 10}}>Reciever: {selectedTrans.request.recipient.name} (0{selectedTrans.request.recipient.phoneNumber})</Text>

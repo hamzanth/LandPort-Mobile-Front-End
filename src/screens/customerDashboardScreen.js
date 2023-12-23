@@ -57,7 +57,7 @@ export default function CustomerDashboard({route, navigation}){
         <PaperProvider>
             {loading ? (
                 <View style={{flex: 1, justifyContent: "center", alignItems:"center", backgroundColor: "teal"}}>
-                    <ActivityIndicator size="large" color="white" animating={true} />
+                    <ActivityIndicator size="large" color="teal" animating={true} />
                 </View>
             ): (
                 <BottomNavigation 
