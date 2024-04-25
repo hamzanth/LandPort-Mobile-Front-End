@@ -6,6 +6,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage'
 import LmisDashHome from './lmisTabScreens/lmisDashHome'
 import LmisDashTrans from './lmisTabScreens/lmisDashTrans'
 import LmisDashProfile from './lmisTabScreens/lmisDashProfile'
+import LmisDashSettings from './lmisTabScreens/lmisDashSettings'
 
 export default function LmisDashboard(){
     const [ index, setIndex ] = useState(0)
@@ -14,6 +15,7 @@ export default function LmisDashboard(){
     const [ routes, setRoutes ] = useState([
         {key: "home", title: "Home", focusedIcon: "home"},
         {key: "transaction", title: "Transactions", focusedIcon: "history"},
+        {key: "settings", title: "Settings", focusedIcon: "cog"},
         {key: "profile", title: "Profile", focusedIcon: "account"},
     ])
 
@@ -22,7 +24,7 @@ export default function LmisDashboard(){
             const token = await AsyncStorage.getItem("userToken")
             try{
                 const decData = jwtDecode(token)
-                await fetch("http://192.168.43.207:3000/users/" + decData.id)
+                await fetch("http://192.168.43.75:3000/users/" + decData.id)
                 .then(resp => resp.json())
                 .then(data => {
                     // console.log(data.user)
@@ -41,7 +43,8 @@ export default function LmisDashboard(){
     const renderScene = BottomNavigation.SceneMap({
         home: (props) => <LmisDashHome {...props} user={user} />,
         transaction: (props) => <LmisDashTrans {...props} user={user} />,
-        profile: (props) => <LmisDashProfile {...props} user={user} />
+        profile: (props) => <LmisDashProfile {...props} user={user} />,
+        settings: (props) => <LmisDashSettings {...props} user={user} />
     })
 
     return (

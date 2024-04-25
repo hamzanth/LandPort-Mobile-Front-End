@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react'
 import { StyleSheet, View, FlatList, Modal, TouchableOpacity, Alert } from 'react-native'
 import { Text, IconButton } from 'react-native-paper'
 import { MaterialIcons } from '@expo/vector-icons'
+import { Card } from 'react-native-shadow-cards'
+import { useNavigation } from '@react-navigation/native'
 
 export default function LmisDashHome(){
     const [ requests, setRequests ] = useState([])
@@ -9,24 +11,28 @@ export default function LmisDashHome(){
     const [ loading, setLoading ] = useState(true)
     const [ showModal, setShowModal ] = useState(false)
     const [ selectedRequest, setSelectedRequest ] = useState({})
+
+    const navigation = useNavigation()
     useEffect(() => {
         const fetchData = async () => {
-            await fetch("http://192.168.43.207:3000/transactions/unapproved-requests")
+            await fetch("http://192.168.43.75:3000/transactions/unapproved-requests")
             .then(resp => resp.json())
             .then(data => {
-                console.log(data.requests)
+                // console.log(data.requests)
                 setRequests(data.requests)
             })
             .catch(error => console.log(error))
 
-            await fetch("http://192.168.43.207:3000/users/riders-company/get-companies")
+            await fetch("http://192.168.43.75:3000/users/riders-company/get-companies")
             .then(resp => resp.json())
             .then(data => {
                 setRiders(data.riders)
                 setLoading(false)
+                // console.log("end of the the fecth call")
             })
             .catch(err => console.log(err))
         }
+        // console.log("end of the the fecth call")
         fetchData()
     }, [])
 
@@ -43,7 +49,7 @@ export default function LmisDashHome(){
 
     const handleYesPress = async (rider) => {
         // console.log(`The rider clicked is ${rider.name}`)
-        await fetch("http://192.168.43.207:3000/transactions/create-transaction", {
+        await fetch("http://192.168.43.75:3000/transactions/create-transaction", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json"
@@ -53,6 +59,7 @@ export default function LmisDashHome(){
         .then(resp => resp.json())
         .then(data => {
             console.log(data)
+            navigation.replace("LmisDashboard")
         })
         .catch(error => console.log(error))
     }
@@ -70,7 +77,7 @@ export default function LmisDashHome(){
                 <Text variant="bodyMedium">Loading Requests</Text>
             ) : (
                 // <Text variant="bodyMedium">Finished Loading Requests</Text>
-                <View>
+                <View style={{flex: 1}}>
                     {/* {showModal && (
                         <View style={styles.modalStyle}>
                             <Text variant="bodyLarge" style={{textAlign: "center"}}>Choose a Rider's Company</Text>
@@ -83,27 +90,27 @@ export default function LmisDashHome(){
                                 <IconButton 
                                     icon="close"
                                     rippleColor="#4caf50"
-                                    size={30}
-                                    iconColor="white"
-                                    containerColor="red"
-                                    style={{alignSelf:"center", marginTop: 15}}
+                                    size={40}
+                                    iconColor="red"
+                                    // containerColor="red"
+                                    style={{alignSelf:"center", marginTop: 15, fontWeight: "bold", borderColor: "red", borderWidth: 3}}
                                     onPress={handleModalClose}
                                 />
-                                <Text variant="headlineSmall" style={{textAlign: "center"}}>Choose a Rider's Company</Text>
+                                <Text variant="headlineSmall" style={{textAlign: "center", fontWeight: "bold", color: "teal"}}>Choose a Rider's Company</Text>
                             </View>
                             {riders.length === 0 ? (
-                                <Text style={{marginTop: 17, textAlign: "center"}}>There is no available Rider's Company at the moment</Text>
+                                <Text style={{marginTop: 17, textAlign: "center", color: "teal", fontWeight: "bold"}}>There is no available Rider's Company at the moment</Text>
                                 ) : (
                                     <View style={{marginTop: 30}}>
                                         <FlatList 
                                             keyExtractor={item => item._id}
                                             data={riders}
                                             renderItem={({item}) => (
-                                                <View style={styles.ridersViewStyle}>
-                                                    <TouchableOpacity style={styles.ridersTextStyle} onPress={() => handleRiderPress(item)}>
-                                                        <Text style={{textAlign: "center", paddingVertical: 10}}>{item.name} (#{item.priceCharged})</Text>
+                                                <Card style={styles.mcardStyle}>
+                                                    <TouchableOpacity onPress={() => handleRiderPress(item)}>
+                                                        <Text style={{textAlign: "center", color: "teal", fontWeight: "bold", fontSize: 19}}>{item.name} (#{item.priceCharged})</Text>
                                                     </TouchableOpacity>
-                                                </View>
+                                                </Card>
                                             )}
                                         />
                                     </View>
@@ -111,26 +118,28 @@ export default function LmisDashHome(){
 
                         </View>
                     </Modal>
-                    <Text variant="headlineMedium" style={{textAlign: "center", marginVertical: 11, color: "white"}}>Recent Requests</Text>
+                    <Text variant="headlineMedium" style={{textAlign: "center", marginVertical: 11, color: "teal", fontWeight: "bold"}}>Recent Requests</Text>
                     {requests.length === 0 ? (
-                        <Text variant="bodyLarge" style={{color: "white"}}>There are no request for now</Text>
+                        <Text variant="bodyLarge" style={{color: "teal"}}>There are no request for now</Text>
                     ) : (
-                        <FlatList 
-                            keyExtractor={(item) => item._id}
-                            data={requests}
-                            renderItem={({item}) => (
-                                <View style={styles.ridersViewStyle}>
-                                    <TouchableOpacity>
-                                        <Text 
-                                            style={styles.listStyle}
-                                            onPress={() => handleModalOpen(item)} 
-                                        >
-                                            {`${item.sender.name} => ${item.recipient.name} (${item.product.name})`}
-                                        </Text>
-                                    </TouchableOpacity>
-                                </View>
-                            )}
-                        />
+                        <View style={{flex: 1}}>
+                            <FlatList 
+                                keyExtractor={(item) => item._id}
+                                data={requests}
+                                renderItem={({item}) => (
+                                    <Card style={[styles.cardStyle]}>
+                                        <TouchableOpacity>
+                                            <Text 
+                                                style={styles.listStyle}
+                                                onPress={() => handleModalOpen(item)} 
+                                            >
+                                                {`${item.sender.name} => ${item.recipient.name} (${item.product.name})`}
+                                            </Text>
+                                        </TouchableOpacity>
+                                    </Card>
+                                )}
+                            />
+                        </View>
                     )}
                 </View>
             )}
@@ -139,10 +148,40 @@ export default function LmisDashHome(){
 }
 
 const styles = StyleSheet.create({
+    ridersList: {
+        width: 20,
+        height: 20,
+        backgroundColor: "teal",
+        borderWidth: 2,
+        borderColor: "red"
+    },
     container: {
         flex: 1,
-        backgroundColor: "teal",
+        backgroundColor: "white",
         alignItems: "center"
+    },
+    cardStyle: {
+        padding: 10, 
+        margin: 10, 
+        elevation: 7, 
+        // backgroundColor: "teal", 
+        borderColor: "teal",
+        borderwidth: 3,
+        // cornerRadius: 30,
+        width: "96%",
+        marginLeft: "auto",
+        marginRight: "auto",
+    },
+    mcardStyle: {
+        padding: 10, 
+        margin: 10, 
+        elevation: 7, 
+        // backgroundColor: "teal", 
+        borderColor: "teal",
+        borderwidth: 3,
+        // cornerRadius: 30,
+        marginLeft: "auto",
+        marginRight: "auto",
     },
     modalStyle: {
         position: "absolute",
@@ -157,26 +196,40 @@ const styles = StyleSheet.create({
         justifyContent: "center", 
         alignItems: "center", 
         marginVertical: 5,
-        // borderColor: "red",
-        // borderWidth: 3
+        borderRadius: 15,
+        borderColor: "teal",
+        borderWidth: 4,
+        backgroundColor: "black",
+        padding: 3
+    },
+    listShadow: {
+        shadowColor: "black",
+        elevation: 10,
+        shadowOffset: {width: 5, height: 4},
+        shadowOpacity: 0.6,
+        shadowRadius: 5,
     },
     ridersTextStyle: { 
-        // borderWidth: 2, 
-        borderWidth: 1, 
-        borderColor: "black", 
+        marginVertical: 5,
+        flexDirection: "row",
+        justifyContent: "center",
+        alignItems: "center",
         borderStyle: "solid", 
-        borderRadius: 5, 
-        width: "70%"
-    },
-    listStyle: {
-        color: "white", 
-        fontSize: 17, 
-        textAlign: "center", 
-        width: "80%", 
-        borderWidth: 2, 
-        borderColor: "white",
-        borderRadius: 3,
+        borderRadius: 15, 
+        width: "80%",
+        borderColor: "teal",
+        borderWidth: 5,
+        backgroundColor: "black",
         marginLeft: "auto",
         marginRight: "auto"
+    },
+    listStyle: {
+        color: "teal",
+        fontWeight: "bold", 
+        fontSize: 17, 
+        textAlign: "center", 
+        // width: "80%", 
+        // marginLeft: "auto",
+        // marginRight: "auto",
     }
 })

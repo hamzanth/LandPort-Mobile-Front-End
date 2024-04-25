@@ -25,7 +25,7 @@ export default function LoginScreen({ navigation }) {
             if(password.length === 0) setPasswordError("password is required to login")
         }
         else{
-            await fetch("http://192.168.43.207:3000/users/login", {
+            await fetch("http://192.168.43.75:3000/users/login", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json"

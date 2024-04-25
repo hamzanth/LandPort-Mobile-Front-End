@@ -7,7 +7,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage'
 import jwtDecode from 'jwt-decode'
 import { ActivityIndicator } from 'react-native-paper'
 
-export default function DashboardFavouritesRoute(){
+export default function LmisDashSettings(){
 
     const [ usr, setUsr ] = useState(null)
     const [ name, setName ] = useState("")
@@ -46,19 +46,6 @@ export default function DashboardFavouritesRoute(){
         fetchData()
     }, [])
 
-    const pinCoords = {
-        latitude: 37.78825,
-        longitude: -122.4324,
-    }
-
-    const [ pin, setPin ] = useState(pinCoords)
-
-    const initialRegion = {
-        latitude: 37.78825,
-        longitude: -122.4324,
-        latitudeDelta: 0.0922,
-        longitudeDelta: 0.0421
-    }
     const navigation = useNavigation()
     const handleUpdate = async () => {
         setUpdateLoading(true)
@@ -107,21 +94,7 @@ export default function DashboardFavouritesRoute(){
     }
     return(
         <View style={styles.container}>
-            {/* <ImageBackground source={require("../bgimg.jpg")} resizeMode="cover" style={styles.backImage}> */}
-            {/* <MapView 
-                style={styles.map} 
-                initialRegion={initialRegion}
-                provider="google"
-            >
-                <Marker 
-                    coordinate={pinCoords}
-                    draggable={true}
-                    onDragStart={(e) => console.log("Drag start " + e.nativeEvent.coordinate)}
-                    onDragEnd={(e) => {
-                        setPin({latitude: e.nativeEvent.coordinate.latitude, longitude: e.nativeEvent.coordinate.longitude})
-                    }}
-                />
-            </MapView> */}
+            <ImageBackground source={require("../../assets/istockphoto2.jpg")} resizeMode="cover" style={styles.backImage}>
             {loading ? (
                 <View style={{flex: 1, justifyContent: "center", alignItems:"center"}}>
                     <ActivityIndicator size="large" color="teal" animating={true} />
@@ -130,7 +103,7 @@ export default function DashboardFavouritesRoute(){
                 <View style={{width: "100%"}}> 
                     <Text variant="headlineSmall" style={styles.headText}>Edit Settings</Text>
                     <View style={styles.inputBoxStyle}>
-                        <Text variant="titleMedium">Name</Text>
+                        <Text variant="titleLarge">Name</Text>
                         <TextInput
                             style={styles.inputStyle}
                             // label="Name"
@@ -139,7 +112,7 @@ export default function DashboardFavouritesRoute(){
                             onChangeText={setName}
                             // onFocus={() => setNameError(null)}
                         />
-                        <Text variant="titleMedium">Email</Text>
+                        <Text variant="titleLarge">Email</Text>
                         <TextInput
                             style={styles.inputStyle}
                             // label="Email"
@@ -148,7 +121,7 @@ export default function DashboardFavouritesRoute(){
                             onChangeText={setEmail}
                             // onFocus={() => setNameError(null)}
                         />
-                        <Text variant="titleMedium">Location</Text>
+                        <Text variant="titleLarge">Location</Text>
                         <TextInput
                             style={styles.inputStyle}
                             // label="Location"
@@ -157,7 +130,7 @@ export default function DashboardFavouritesRoute(){
                             onChangeText={setLocation}
                             // onFocus={() => setNameError(null)}
                         />
-                        <Text variant="titleMedium">Phone Number</Text>
+                        <Text variant="titleLarge">Phone Number</Text>
                         <TextInput
                             style={styles.inputStyle}
                             // label="Phone Number"
@@ -180,7 +153,7 @@ export default function DashboardFavouritesRoute(){
                     </Button>
                 </View>
             )}
-            {/* </ImageBackground> */}
+            </ImageBackground>
         </View>
     )
 }
@@ -188,11 +161,10 @@ export default function DashboardFavouritesRoute(){
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        alignItems: "center",
-        justifyContent: "center",
     },
     backImage: {
         flex: 1,
+        justifyContent: "center",
         // backgroundColor: "#fff",
         alignItems: "center",
         justifyContent: "center",
@@ -201,11 +173,7 @@ const styles = StyleSheet.create({
         textAlign: "center", 
         marginBottom: 10,
         color: "teal",
-        fontWeight: "bold",
-        position: "absolute",
-        top: -85,
-        left: "35%",
-        right: "auto"
+        fontWeight: "bold"
     },
     map: {
         width: Dimensions.get("window").width,

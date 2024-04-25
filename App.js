@@ -1,9 +1,9 @@
 // import { StatusBar } from 'expo-status-bar';
 // import { StyleSheet, Text, View } from 'react-native';
-
+import React, { useEffect } from 'react'
 import 'react-native-gesture-handler'
 import { NavigationContainer } from '@react-navigation/native'
-import { View, Text, StyleSheet } from 'react-native'
+import { View, Text, StyleSheet, ImageBackground, Alert } from 'react-native'
 import { createStackNavigator } from '@react-navigation/stack'
 import HomeScreen from './src/screens/homeScreen'
 import LoginScreen from './src/screens/login'
@@ -11,32 +11,150 @@ import RegisterScreen from './src/screens/register'
 import customerDashboard from './src/screens/customerDashboardScreen'
 import LmisDashboard from './src/screens/lmisDashboardScreen'
 import RidersDashboard from './src/screens/ridersDashboardScreen'
+import MyDrawer from './src/screens/customerTabScreens/stackHome'
+import TransProvider from './transactionContext'
+
+import messaging from '@react-native-firebase/messaging'
+import CustomerDashboard from './src/screens/customerDashboardScreen'
+
+const requestUserPermission = async () => {
+  const authStatus = await messaging().requestPermission()
+  const enabled = authStatus === messaging.AuthorizationStatus.AUTHORIZED || authStatus === messaging.AuthorizationStatus.PROVISIONAL
+  
+  if(enabled){
+    console.log("Authorization status:", authStatus)
+  }
+}
+
+// useEffect(()=> {
+//   if(requestUserPermission()){
+//     messaging().getToken().then(token => {
+//       console.log(token)
+//     })
+//   }
+//   else{
+//     console.log("Failed token status", authStatus)
+//   }
+
+//   messaging().getInitialNotification().then(remoteMessage => {
+//     if(remoteMessage){
+//       console.log("Notification caused app to open from quit state", remoteMessage.notification)
+//     }
+//   })
+  
+//   messaging().onNotificationOpenedApp(remoteMessage => {
+//     if(remoteMessage){
+//       console.log("Notification caused app to open from background state", remoteMessage.notification)
+//     }
+//   })
+  
+//   messaging().setBackgroundMessageHandler(remoteMessage => {
+//     if(remoteMessage){
+//       console.log("Message handled in the background", remoteMessage)
+//     }
+//   })
+  
+//   const unsubscribe = messaging().onMessage(async (remoteMessage) => {
+//     Alert.alert("A new FCM message arrived", JSON.stringify(remoteMessage))
+//   })
+  
+//   return unsubscribe
+
+// }, [])
 
 const Stack = createStackNavigator()
+
+const Header = (props) => {
+  return (
+    // <ImageBackground source={require("./worldmap.jpg")} style={{width: props.name === "Home" ? 330 : 230, height: "100%"}}>
+    // style={{flexDirection: "row", justifyContent: "center", alignItems: "center", height: "100%", flex: 1, borderColor: "black", borderWidth: 2, backgroundColor: "green"}}
+      <View>
+        <Text style={{fontSize: 25, fontWeight: "bold", color: "black"}}>{props.name}</Text>
+      </View>
+  )
+}
 
 function StackNavigator(){
   return (
     <Stack.Navigator
       screenOptions = {{
-        headerStyle: {backgroundColor: '#f1f1f1'},
+        headerStyle: {backgroundColor: 'red'},
         headerTintColor: 'black',
-        headerTitleStyle: {fontWeight: 'bold'}
+        headerTitleStyle: {fontWeight: 'normal'}
       }}
     >
-      <Stack.Screen name="Home" component={HomeScreen} />
-      <Stack.Screen name="Login" component={LoginScreen} />
-      <Stack.Screen name="Register" component={RegisterScreen} />
-      <Stack.Screen name="CustomerDashboard" component={customerDashboard} />
-      <Stack.Screen name="LmisDashboard" component={LmisDashboard} />
-      <Stack.Screen name="RidersDashboard" component={RidersDashboard} />
+      <Stack.Screen 
+        name="Home" 
+        component={HomeScreen}
+        options={{
+          // headerTitle: () => <Header name="Home" />,
+          title: "Homes",
+          headerTitleStyle: {alignSelf: "center", fontWeight: "bold"},
+          headerTitleAlign: "center",
+          headerStyle: {backgroundColor: "#d4d4d4", height: 80}
+        }}  
+      />
+      <Stack.Screen 
+        name="Login" 
+        component={LoginScreen} 
+        options={{
+          title: "Login",
+          headerTitleStyle: {alignSelf: "center", fontWeight: "bold"},
+          headerTitleAlign: "center",
+          headerStyle: {backgroundColor: "#d4d4d4", height: 80}
+        }}
+        />
+      <Stack.Screen 
+        name="Register" 
+        component={RegisterScreen} 
+        options={{
+          title: "Register",
+          headerTitleStyle: {alignSelf: "center", fontWeight: "bold"},
+          headerTitleAlign: "center",
+          headerStyle: {backgroundColor: "#d4d4d4", height: 80},
+          headerShown: false
+        }}
+        />
+      <Stack.Screen 
+        name="CustomerDashboard" 
+        component={CustomerDashboard} 
+        options={{
+          title: "Customer Dashboard",
+          headerTitleStyle: {alignSelf: "center", fontWeight: "bold"},
+          headerTitleAlign: "center",
+          headerStyle: {backgroundColor: "#d4d4d4", height: 80}
+        }}
+        />
+      <Stack.Screen 
+        name="LmisDashboard" 
+        component={LmisDashboard} 
+        options={{
+          title: "Lmis Dashboard",
+          headerTitleStyle: {alignSelf: "center", fontWeight: "bold"},
+          headerTitleAlign: "center",
+          headerStyle: {backgroundColor: "#d4d4d4", height: 80}
+        }}
+        />
+      <Stack.Screen 
+        name="RidersDashboard" 
+        component={RidersDashboard} 
+        options={{
+          title: "Rider Dashboard",
+          headerTitleStyle: {alignSelf: "center", fontWeight: "bold"},
+          headerTitleAlign: "center",
+          headerStyle: {backgroundColor: "#d4d4d4", height: 80}
+        }}
+        />
     </Stack.Navigator>
   )
 }
 export default function App(){
   return (
-    <NavigationContainer>
-      <StackNavigator />
-    </NavigationContainer>
+    <TransProvider>
+      <NavigationContainer>
+        <StackNavigator />
+      </NavigationContainer>
+    </TransProvider>
   )
 }
 

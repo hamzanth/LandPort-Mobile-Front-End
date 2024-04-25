@@ -11,17 +11,18 @@ export default function LmisDashTrans({user}){
     const [ showTransDetail, setShowTransDetail ] = useState(false)
 
     useEffect(() => {
-        const fecthData = async () => {
-            await fetch("http://192.168.43.207:3000/transactions/get-transactions")
+        const fetchData = async () => {
+            await fetch("http://192.168.43.75:3000/transactions/completed-transactions")
             .then(resp => resp.json())
             .then(data => {
-                console.log(data.message)
-                setTrans(trans)
+                // console.log(data.message)
+                // console.log(data)
+                setTrans(data.transactions)
                 setLoading(false)
             })
             .catch(error => console.log(error))
         }
-        
+        fetchData()
     }, [])
 
     const handleTransDetails = (trans) => {
@@ -37,7 +38,7 @@ export default function LmisDashTrans({user}){
         <View style={[styles.container, {justifyContent: loading ? "center" : "flex-start"}]}>
             {loading ? (
                 <View>
-                    <Text variant="headlineMedium" style={{textAlign: "center", color: "white"}}>Loading...</Text>
+                    <Text variant="headlineMedium" style={{textAlign: "center", color: "teal"}}>Loading...</Text>
                 </View>
             )
              : (
@@ -66,15 +67,15 @@ export default function LmisDashTrans({user}){
                             </View>
                         </View>
                     )}
-                    <Text variant="headlineMedium" style={{textAlign: "center", marginBottom: 19, marginTop: 13, color: "white"}}>History of Transactions</Text>
+                    <Text variant="headlineMedium" style={{textAlign: "center", marginBottom: 19, marginTop: 13, color: "teal", fontWeight: "bold"}}>History of Transactions</Text>
                     <FlatList 
                         keyExtractor={(item) => item._id}
-                        data={user.transactions}
+                        data={trans}
                         renderItem={({ item }) => (
                             <View style={styles.indTrans}>
                                 <TouchableOpacity onPress={() => handleTransDetails(item)}>
-                                    <Text variant="bodyLarge" style={{textAlign: "center", color: "white"}}>{moment(item.dateCreated).calendar()}</Text>
-                                    <Text variant="bodyLarge" style={{textAlign: "center", color: "white"}}>{item.refNumber}</Text>
+                                    <Text variant="bodyLarge" style={{textAlign: "center", color: "white", fontSize: 17}}>{moment(item.dateCreated).calendar()}</Text>
+                                    <Text variant="bodyLarge" style={{textAlign: "center", color: "white", fontSize: 17}}>{item.refNumber}</Text>
                                 </TouchableOpacity>
                             </View>
                         )}
@@ -88,16 +89,22 @@ export default function LmisDashTrans({user}){
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: "teal",
+        backgroundColor: "white",
     },
     indTrans: {
-        borderWidth: 2,
-        borderColor: "white",
         width: "80%",
         marginLeft: "auto",
         marginRight: "auto",
-        marginVertical: 10,
-        borderRadius: 5
+        // anotherset
+        flexDirection: "row", 
+        justifyContent: "center", 
+        alignItems: "center", 
+        marginVertical: 5,
+        borderRadius: 15,
+        borderColor: "teal",
+        borderWidth: 4,
+        backgroundColor: "black",
+        padding: 3
     },
     transModal: {
         position: "absolute",

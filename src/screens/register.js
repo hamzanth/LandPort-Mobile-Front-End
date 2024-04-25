@@ -14,7 +14,7 @@ export default function RegisterScreen({navigation}){
 
     const handleRegister = () => {
         setLoading(true)
-        fetch("http://192.168.43.207:3000/users/register", {
+        fetch("http://192.168.43.75:3000/users/register", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json"

@@ -12,6 +12,10 @@ export default function HomeScreen({ navigation }) {
   const handlePress = async () => {
     // console.log("Custom Button Pressed")
     const token = await AsyncStorage.getItem("userToken")
+    // await AsyncStorage.removeItem("userToken")
+    // navigation.navigate("Home")
+    // await AsyncStorage.removeItem("userToken")
+    // navigation.navigate("Home")
     // console.log(token)
     if (token){
       try{

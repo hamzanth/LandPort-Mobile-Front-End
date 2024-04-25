@@ -1,21 +1,24 @@
 import React, { useState, useEffect } from 'react'
-import { View, StyleSheet, ActivityIndicator, FlatList, TouchableOpacity, Dimensions, Modal } from 'react-native'
-import { Portal, PaperProvider, Text, Button, TextInput, IconButton, MD3Colors } from 'react-native-paper'
+import { View, StyleSheet, FlatList, TouchableOpacity, Dimensions, Modal } from 'react-native'
+import { Portal, PaperProvider, ActivityIndicator, Text, Button, TextInput, IconButton, MD3Colors } from 'react-native-paper'
 import moment from 'moment'
 import MapView, {Marker, Callout} from 'react-native-maps'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import jwtDecode from 'jwt-decode'
 import { Entypo } from '@expo/vector-icons'
 import * as Location from 'expo-location'
+import { useNavigation } from '@react-navigation/native'
+import { Card } from 'react-native-shadow-cards'
 
-export default function DashboardHomeRoute({ usr }){
+export default function DashboardHomeRoute(){
     // console.log(customer)
 
     // const pinCoords = {
     //     latitude: 37.78825,
     //     longitude: -122.4324,
     // }
-
+    const navigation = useNavigation()
+    const [ usr, setUsr] = useState(null)
     const [ pin, setPin ] = useState({})
     const [ userLocation , setUserLocation ] = useState(null)
     const [ finalUserLocation , setFinalUserLocation ] = useState(null)
@@ -60,6 +63,8 @@ export default function DashboardHomeRoute({ usr }){
 
     useEffect(() => {
         const fetchData = async () => {
+            // await AsyncStorage.removeItem("userToken")
+            // navigation.navigate("Home")
             const { status } = await Location.requestForegroundPermissionsAsync()
             if ( status !== "granted"){
                 setLocationAccess(false)
@@ -76,13 +81,13 @@ export default function DashboardHomeRoute({ usr }){
                 })
                 setUserLocation({latitude: currLocation.coords.latitude, longitude: currLocation.coords.longitude})
                 setPin({latitude: currLocation.coords.latitude, longitude: currLocation.coords.longitude})
-                console.log(currLocation)
-                setLoading(false)
+                // console.log(currLocation)
+                // setLoading(false)
             // }
     //         const data = await AsyncStorage.getItem("userToken")
     //         try{
     //             const decData = jwtDecode(data)
-    //             await fetch("http://192.168.43.207:3000/users/" + decData.id)
+    //             await fetch("http://192.168.43.75:3000/users/" + decData.id)
     //             .then(resp => resp.json())
     //             .then(data => {
     //                 setUser(data.user)
@@ -95,6 +100,27 @@ export default function DashboardHomeRoute({ usr }){
     //         catch(error){
     //             console.log("something went wrong")
             }
+
+            const data = await AsyncStorage.getItem("userToken")
+            // console.log(data)
+            try{
+                const decData = jwtDecode(data)
+                await fetch("http://192.168.43.75:3000/users/" + decData.id)
+                .then(resp => resp.json())
+                .then(data => {
+                    setUsr(data.user)
+                    console.log("i am supposed to get the user")
+                    // console.log(data.user)
+                    setLoading(false)
+                })
+                .catch(error => {
+                    console.log(error)
+                })
+            }
+            catch(error){
+                console.log("something went wrong")
+            }
+
         }
         fetchData()
 
@@ -157,7 +183,7 @@ export default function DashboardHomeRoute({ usr }){
 
         const price = distance * 500
 
-        await fetch("http://192.168.43.207:3000/transactions/" + usr._id + "/make-request", {
+        await fetch("http://192.168.43.75:3000/transactions/" + usr._id + "/make-request", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json"
@@ -176,8 +202,9 @@ export default function DashboardHomeRoute({ usr }){
         })
         .then(resp => resp.json())
         .then(data => {
-            console.log(data.request)
-            alert("request has been made successfully, wait a moment for response")
+            // console.log(data.request)
+            alert(data.message)
+            setUsr(data.usr)
             // setVisible(false)
             setMfvisible(false)
             setPin(userLocation)
@@ -231,7 +258,7 @@ export default function DashboardHomeRoute({ usr }){
 
     const handleConfirmButton = async (selTrans) => {
         // alert("Transaction completed successfully")
-        await fetch("http://192.168.43.207:3000/transactions/" + usr._id + "/cust-confirm/" + selTrans._id, {
+        await fetch("http://192.168.43.75:3000/transactions/" + usr._id + "/cust-confirm/" + selTrans._id, {
             method: "PUT",
             headers: {
                 "Content-Type": "application/json"
@@ -239,12 +266,14 @@ export default function DashboardHomeRoute({ usr }){
         })
         .then(resp => resp.json())
         .then(data => {
-            console.log(data.transaction)
+            // console.log(data.transaction)
             alert("Transaction completed successfully")
+            // console.log(data)
+            setUsr(data.user)
             setShowTransDetail(false)
             setTimeout(() => {
                 const delRequest = async () => {
-                    await fetch("http://192.168.43.207:3000/transactions/" + usr._id + "/delete-transaction/" + selTrans._id, {
+                    await fetch("http://192.168.43.75:3000/transactions/" + usr._id + "/delete-transaction/" + selTrans._id, {
                     method: "DELETE",
                     headers: {
                         "Content-Type": "application/json"
@@ -252,8 +281,9 @@ export default function DashboardHomeRoute({ usr }){
                     })
                     .then(resp => resp.json())
                     .then(data => {
-                        console.log(data.transaction)
+                        // console.log(data.transaction)
                         alert("deleted successfully")
+                        setUsr(data.user)
                     })
                 }
 
@@ -270,20 +300,20 @@ export default function DashboardHomeRoute({ usr }){
                         icon="close"
                         rippleColor="#4caf50"
                         size={30}
-                        iconColor="white"
-                        containerColor="red"
-                        style={{alignSelf:"center", marginTop: 15}}
+                        iconColor="red"
+                        // containerColor="red"
+                        style={{alignSelf:"center", marginTop: 15, fontWeight: "bold", borderColor: "red", borderWidth: 4}}
                         onPress={handleTransDetailClose}
                     />
                     <View>
-                        <Text variant="headlineLarge" style={{textAlign: "center", marginBottom: 10}}>{selectedTrans.refNumber}</Text>
-                        <Text variant="bodyLarge" style={{textAlign: "center", marginBottom: 10}}>Date: {moment(selectedTrans.dateCreated).calendar()} ({moment(selectedTrans.dateCreated).fromNow()})</Text>
-                        <Text variant="bodyLarge" style={{textAlign: "center", marginBottom: 10}}>Completed: {selectedTrans.completed ? "True" : "False"} </Text>
-                        <Text variant="bodyLarge" style={{textAlign: "center", marginBottom: 10}}>Distance: {selectedTrans.distance.toFixed(2)}KM</Text>
-                        <Text variant="bodyLarge" style={{textAlign: "center", marginBottom: 10}}>Transaction Cost: #{selectedTrans.transactionCost}</Text>
-                        <Text variant="bodyLarge" style={{textAlign: "center", marginBottom: 10}}>Sender: {selectedTrans.customer.name} (0{selectedTrans.customer.phoneNumber})</Text>
-                        <Text variant="bodyLarge" style={{textAlign: "center", marginBottom: 10}}>Reciever: {selectedTrans.request.recipient.name} (0{selectedTrans.request.recipient.phoneNumber})</Text>
-                        <Text variant="bodyLarge" style={{textAlign: "center", marginBottom: 10}}>Rider's Company: {selectedTrans.riderCompany.name}</Text>
+                        <Text variant="headlineLarge" style={{textAlign: "center", marginVertical: 10, borderColor: "teal", borderWidth: 2, color: "teal"}}>{selectedTrans.refNumber}</Text>
+                        <Text variant="bodyLarge" style={{fontWeight: "bold", textAlign: "center", marginBottom: 10, color: "teal"}}>Date: {moment(selectedTrans.dateCreated).calendar()} ({moment(selectedTrans.dateCreated).fromNow()})</Text>
+                        <Text variant="bodyLarge" style={{fontWeight: "bold", textAlign: "center", marginBottom: 10, color: "teal"}}>Completed: {selectedTrans.completed ? "True" : "False"} </Text>
+                        <Text variant="bodyLarge" style={{fontWeight: "bold", textAlign: "center", marginBottom: 10, color: "teal"}}>Distance: {selectedTrans.distance.toFixed(2)}KM</Text>
+                        <Text variant="bodyLarge" style={{fontWeight: "bold", textAlign: "center", marginBottom: 10, color: "teal"}}>Transaction Cost: #{selectedTrans.transactionCost}</Text>
+                        <Text variant="bodyLarge" style={{fontWeight: "bold", textAlign: "center", marginBottom: 10, color: "teal"}}>Sender: {selectedTrans.customer.name} (0{selectedTrans.customer.phoneNumber})</Text>
+                        <Text variant="bodyLarge" style={{fontWeight: "bold", textAlign: "center", marginBottom: 10, color: "teal"}}>Reciever: {selectedTrans.request.recipient.name} (0{selectedTrans.request.recipient.phoneNumber})</Text>
+                        <Text variant="bodyLarge" style={{fontWeight: "bold", textAlign: "center", marginBottom: 10, color: "teal"}}>Rider's Company: {selectedTrans.riderCompany.name}</Text>
                         
                     </View>
                     <View style={{marginTop: 30}}>
@@ -292,7 +322,7 @@ export default function DashboardHomeRoute({ usr }){
                             mode="contained"
                             rippleColor="#4caf50"
                             icon="check"
-                            buttonColor="black"
+                            buttonColor="teal"
                             textColor="white"
                             onPress={() => handleConfirmButton(selectedTrans)}
                             // disabled={selectedTrans ? true : false}
@@ -408,13 +438,13 @@ export default function DashboardHomeRoute({ usr }){
                     </View>
                 )}
             </Modal> 
-            <View style={[styles.container, {justifyContent: loading ? "center" : "flex-start"}]}>
-                    {/* {loading ? (
+            {/* <View style={[styles.container, {justifyContent: loading ? "center" : "flex-start"}]}>
+                    {loading ? (
                         <View>
                             <ActivityIndicator size="large" color="white" />
                         </View>
                     ): ( */}
-                        {/* <View style={styles.showCont}> */}
+                        <View style={styles.showCont}>
                             <Portal>
                                 {/* {visible && ( */}
                                     <Modal 
@@ -424,166 +454,168 @@ export default function DashboardHomeRoute({ usr }){
                                         // style={styles.modalStyles}
                                         // style={styles.transFormModal}
                                     >
-                                        <IconButton 
-                                            icon="close"
-                                            rippleColor="#4caf50"
-                                            size={30}
-                                            iconColor="white"
-                                            containerColor="red"
-                                            style={{alignSelf:"center", top: 5, right: 7, position: "absolute", zIndex: 70}}
-                                            onPress={handleModalClose}
-                                        />
-                                        <View style={{display: selectedForm === 0 ? "flex" : "none"}}>
-                                        {/* <Text variant="bodyLarge" style={{textAlign: "center", marginTop: 10}}>Select Receiver's Location</Text> */}
-                                        <Text variant="labelMedium" style={{textAlign: "center", marginVertical: 16}}>Enter your(sender) Details</Text>
-                                            {/* <TextInput
-                                                style={styles.inputStyle} 
-                                                mode="outlined"
-                                                label="Sender Name"
-                                                value={senderName}
-                                                onChangeText={setSenderName}
-                                            /> */}
-                                            {/* <TextInput
-                                                style={styles.inputStyle} 
-                                                mode="outlined"
-                                                label="Sender Location"
-                                                value={senderLocation}
-                                                onChangeText={setSenderLocation}
-                                            /> */}
-                                            {/* <TextInput
-                                                style={styles.inputStyle} 
-                                                mode="outlined"
-                                                label="Sender Phone Number"
-                                                value={senderPhoneNumber}
-                                                keyboardType="numeric"
-                                                onChangeText={setSenderPhoneNumber}
-                                            /> */}
-                                            <Button
-                                                style={styles.recvLocation}
+                                        <View style={{justifyContent: "center", alignItems: "center", flex: 1}}>
+                                            <IconButton 
+                                                icon="close"
                                                 rippleColor="#4caf50"
-                                                mode="contained"
-                                                buttonColor="black"
-                                                textColor="white"
-                                                onPress={() => {
-                                                    // setShowSendMapModal(true) 
-                                                    // setVisible(false)
-                                                    setShowSCM(true)
-                                                }}
-                                            >
-                                                Choose a New Location
-                                            </Button>
-                                            <Button
-                                                style={styles.recvLocation}
-                                                rippleColor="#4caf50"
-                                                mode="contained"
-                                                buttonColor="black"
-                                                textColor="white"
-                                                onPress={() => {
-                                                    setFinalUserLocation(pin)
-                                                    setSelectedForm(1)
-                                                }}
-                                            >
-                                                Use Current Location
-                                            </Button>
-                                        </View>
-                                        <View style={{display: selectedForm === 1 ? "flex" : "none", marginHorizontal: 15,}}>
-                                            <Text variant="labelMedium" style={{textAlign: "center", marginVertical: 16}}>Enter receiver Details</Text>
-                                            <TextInput
-                                                style={styles.inputStyle} 
-                                                mode="outlined"
-                                                label="Reciever Name"
-                                                value={recieverName}
-                                                onChangeText={setRecieverName}
+                                                size={30}
+                                                iconColor="white"
+                                                containerColor="red"
+                                                style={{alignSelf:"center", top: 5, right: 7, position: "absolute", zIndex: 70}}
+                                                onPress={handleModalClose}
                                             />
-                                            <TextInput
-                                                style={styles.inputStyle} 
-                                                mode="outlined"
-                                                label="Reciever Location"
-                                                value={recieverLocation}
-                                                onChangeText={setRecieverLocation}
-                                            />
-                                            <TextInput
-                                                style={styles.inputStyle} 
-                                                mode="outlined"
-                                                label="Reciever Phone Number"
-                                                value={recieverPhoneNumber}
-                                                keyboardType="numeric"
-                                                onChangeText={setRecieverPhoneNumber}
-                                            />
-                                            <Button
-                                                style={styles.recvLocation}
-                                                rippleColor="#4caf50"
-                                                mode="contained"
-                                                buttonColor="black"
-                                                textColor="white"
-                                                onPress={() => {
-                                                    // setShowRecvMapModal(true); setVisible(false)
-                                                    setShowRCM(true)
-                                                }}
-                                            >
-                                                Choose Receiver Location
-                                            </Button>
+                                            <View style={{display: selectedForm === 0 ? "flex" : "none", width: "100%"}}>
+                                            {/* <Text variant="bodyLarge" style={{textAlign: "center", marginTop: 10}}>Select Receiver's Location</Text> */}
+                                            <Text variant="headlineSmall" style={{textAlign: "center", color: "teal", fontWeight: "bold", marginBottom: 10, position: "absolute", width: "100%", top: -135}}>Enter your(sender) Details</Text>
+                                                <TextInput
+                                                    style={styles.inputStyle} 
+                                                    mode="outlined"
+                                                    label="Sender Name"
+                                                    value={senderName}
+                                                    onChangeText={setSenderName}
+                                                />
+                                                <TextInput
+                                                    style={styles.inputStyle} 
+                                                    mode="outlined"
+                                                    label="Sender Location"
+                                                    value={senderLocation}
+                                                    onChangeText={setSenderLocation}
+                                                />
+                                                <TextInput
+                                                    style={styles.inputStyle} 
+                                                    mode="outlined"
+                                                    label="Sender Phone Number"
+                                                    value={senderPhoneNumber}
+                                                    keyboardType="numeric"
+                                                    onChangeText={setSenderPhoneNumber}
+                                                />
+                                                <Button
+                                                    style={styles.recvLocation}
+                                                    rippleColor="#4caf50"
+                                                    mode="contained"
+                                                    buttonColor="black"
+                                                    textColor="white"
+                                                    onPress={() => {
+                                                        // setShowSendMapModal(true) 
+                                                        // setVisible(false)
+                                                        setShowSCM(true)
+                                                    }}
+                                                >
+                                                    Choose a New Location
+                                                </Button>
+                                                <Button
+                                                    style={styles.recvLocation}
+                                                    rippleColor="#4caf50"
+                                                    mode="contained"
+                                                    buttonColor="black"
+                                                    textColor="white"
+                                                    onPress={() => {
+                                                        setFinalUserLocation(pin)
+                                                        setSelectedForm(1)
+                                                    }}
+                                                >
+                                                    Use Current Location
+                                                </Button>
+                                            </View>
+                                            <View style={{display: selectedForm === 1 ? "flex" : "none", width: "100%"}}>
+                                                <Text variant="headlineSmall" style={{textAlign: "center", color: "teal", fontWeight: "bold", marginBottom: 10, position: "absolute", width: "100%", top: -135}}>Enter receiver Details</Text>
+                                                <TextInput
+                                                    style={styles.inputStyle} 
+                                                    mode="outlined"
+                                                    label="Reciever Name"
+                                                    value={recieverName}
+                                                    onChangeText={setRecieverName}
+                                                />
+                                                <TextInput
+                                                    style={styles.inputStyle} 
+                                                    mode="outlined"
+                                                    label="Reciever Location"
+                                                    value={recieverLocation}
+                                                    onChangeText={setRecieverLocation}
+                                                />
+                                                <TextInput
+                                                    style={styles.inputStyle} 
+                                                    mode="outlined"
+                                                    label="Reciever Phone Number"
+                                                    value={recieverPhoneNumber}
+                                                    keyboardType="numeric"
+                                                    onChangeText={setRecieverPhoneNumber}
+                                                />
+                                                <Button
+                                                    style={styles.recvLocation}
+                                                    rippleColor="#4caf50"
+                                                    mode="contained"
+                                                    buttonColor="black"
+                                                    textColor="white"
+                                                    onPress={() => {
+                                                        // setShowRecvMapModal(true); setVisible(false)
+                                                        setShowRCM(true)
+                                                    }}
+                                                >
+                                                    Choose Receiver Location
+                                                </Button>
 
-                                        </View>
-                                        <View style={{display: selectedForm === 2 ? "flex" : "none", marginHorizontal: 15, paddingTop: 20}}>
-                                            <Text variant="labelMedium" style={{textAlign: "center", marginVertical: 16}}>Enter Product Details</Text>
-                                            <TextInput
-                                                style={styles.inputStyle} 
-                                                mode="outlined"
-                                                label="Product Name"
-                                                value={productName}
-                                                onChangeText={setProductName}
-                                            />
-                                            <TextInput
-                                                style={styles.inputStyle} 
-                                                mode="outlined"
-                                                label="Product Quantity"
-                                                value={productQuantity}
-                                                onChangeText={setProductQuantity}
-                                            />
-                                            <TextInput
-                                                style={styles.inputStyle} 
-                                                mode="outlined"
-                                                label="Product Image"
-                                                value={productImage}
-                                                onChangeText={setProductImage}
-                                            />
-                                            <Button
-                                                style={styles.mfinal}
-                                                rippleColor="#4caf50"
-                                                mode="contained"
-                                                buttonColor="black"
-                                                textColor="white"
-                                                loading={loading}
-                                                onPress={handleMakeRequest}
-                                            >
-                                                make request
-                                            </Button>
-                                        </View>
-                                        <View style={styles.navButtons}>
-                                            <IconButton
-                                                rippleColor="#4caf50"
-                                                icon="arrow-left-bold"
-                                                size={50}
-                                                iconColor="teal"
-                                                containerColor="white"
-                                                onPress={goBackward}                                      
-                                            />
-                                            <IconButton
-                                                rippleColor="#4caf50"
-                                                icon="arrow-right-bold"
-                                                size={50}
-                                                iconColor="teal"
-                                                containerColor="white"
-                                                onPress={goForward}                                      
-                                            />
+                                            </View>
+                                            <View style={{display: selectedForm === 2 ? "flex" : "none", paddingTop: 20, width: "100%"}}>
+                                                <Text variant="headlineSmall" style={{textAlign: "center", color: "teal", fontWeight: "bold", marginBottom: 10, position: "absolute", top: -135, width: "100%"}}>Enter Product Details</Text>
+                                                <TextInput
+                                                    style={styles.inputStyle} 
+                                                    mode="outlined"
+                                                    label="Product Name"
+                                                    value={productName}
+                                                    onChangeText={setProductName}
+                                                />
+                                                <TextInput
+                                                    style={styles.inputStyle} 
+                                                    mode="outlined"
+                                                    label="Product Quantity"
+                                                    value={productQuantity}
+                                                    onChangeText={setProductQuantity}
+                                                />
+                                                <TextInput
+                                                    style={styles.inputStyle} 
+                                                    mode="outlined"
+                                                    label="Product Image"
+                                                    value={productImage}
+                                                    onChangeText={setProductImage}
+                                                />
+                                                <Button
+                                                    style={styles.mfinal}
+                                                    rippleColor="#4caf50"
+                                                    mode="contained"
+                                                    buttonColor="black"
+                                                    textColor="white"
+                                                    loading={loading}
+                                                    onPress={handleMakeRequest}
+                                                >
+                                                    make request
+                                                </Button>
+                                            </View>
+                                            <View style={styles.navButtons}>
+                                                <IconButton
+                                                    rippleColor="#4caf50"
+                                                    icon="arrow-left-bold"
+                                                    size={50}
+                                                    iconColor="teal"
+                                                    containerColor="white"
+                                                    onPress={goBackward}                                      
+                                                />
+                                                <IconButton
+                                                    rippleColor="#4caf50"
+                                                    icon="arrow-right-bold"
+                                                    size={50}
+                                                    iconColor="teal"
+                                                    containerColor="white"
+                                                    onPress={goForward}                                      
+                                                />
+                                            </View>
                                         </View>
                                     </Modal>
                             </Portal>
                             {/* <Modal visible={true}> */}
                                 {loading ? (
-                                    <View>
-                                        <ActivityIndicator size="large" color="white" />
+                                    <View style={{flex: 1, alignItems: "center", justifyContent: "center"}}>
+                                        <ActivityIndicator size="large" color="teal" animating={true} />
                                     </View>
                                 ): (
                                 <View style={styles.showCont}>
@@ -591,8 +623,8 @@ export default function DashboardHomeRoute({ usr }){
                                         <Text variant="headlineMedium" style={styles.header}>Welcome {usr && usr.name}</Text>
                                     </View>
                                     <Button
-                                        textColor="black"
-                                        buttonColor="white"
+                                        textColor="white"
+                                        buttonColor="teal"
                                         mode="contained"
                                         rippleColor="#4caf50"
                                         style={styles.mrButton}
@@ -600,19 +632,19 @@ export default function DashboardHomeRoute({ usr }){
                                     >
                                         make request
                                     </Button>
-                                    <View style={{position: "absolute", top: 200, width: "100%"}}>
-                                        <Text variant="headlineLarge" style={{textAlign: "center"}}>Recent Links</Text>
+                                    <View style={{flex: 1}}>
+                                        <Text variant="headlineMedium" style={{textAlign: "center", color: "teal"}}>Recent Links</Text>
                                         <FlatList 
                                             keyExtractor={(item) => item._id}
                                             data={usr.transactions}
                                             renderItem={({item}) => (
-                                                // <BoxShadow setting={shadowOpt}>
+                                            
+                                                <Card style={styles.cardStyle}>
                                                     <TouchableOpacity onPress={() => handleTransDetails(item)}>
-                                                        {/* <View elevation={5} style={styles.linkView}> */}
-                                                            <Text variant="bodyLarge" style={{textAlign: "left", color: "black", fontSize: 19}}>{item.refNumber} {item.customerConfirm ? <Entypo name="check" size={23}/> : <Entypo name="cog" size={19}/>}</Text>
-                                                        {/* </View> */}
+                                                            <Text variant="bodyLarge" style={styles.linkListText}>{item.refNumber} {item.customerConfirm ? <Entypo name="check" size={23}/> : <Entypo name="cog" size={19}/>}</Text>
                                                     </TouchableOpacity>
-                                                // </BoxShadow>
+                                                </Card>
+
                                             )}
                                         />
                                     </View>
@@ -624,15 +656,18 @@ export default function DashboardHomeRoute({ usr }){
                         {/* </View>   */}
                     {/* )} */}
                 </View>
+            
             </PaperProvider>
 
     )
 }
 
+// style={{position: "absolute", top: 200, width: "100%"}}
+
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        // backgroundColor: "teal",
+        backgroundColor: "white",
         alignItems: "center",
         paddingTop: 30
     },
@@ -642,7 +677,8 @@ const styles = StyleSheet.create({
     },
     header: {
         // textAlign: "center",
-        // color: "white",
+        fontWeight: "bold",
+        color: "teal",
     },
     modalStyles: {
         backgroundColor: "white", 
@@ -652,14 +688,18 @@ const styles = StyleSheet.create({
         justifyContent: "flex-start"
     },
     mrButton: {
-        width: 150,
-        paddingVertical: 0,
-        paddingHorizontal: 0,
-        position: "absolute",
-        top: 140,
+        // width: 150,
+        // paddingVertical: 0,
+        // paddingHorizontal: 0,
+        // position: "absolute",
+        // top: 140,
+        marginVertical: 40
     },
     inputStyle: {
         marginBottom: 5,
+        width: "80%",
+        marginLeft: "auto",
+        marginRight: "auto"
     },
     navButtons: {
         flexDirection: "row",
@@ -672,7 +712,10 @@ const styles = StyleSheet.create({
     },
     mfinal: {
         borderRadius: 3,
-        marginTop: 13
+        marginTop: 13,
+        width: "70%",
+        marginRight: "auto",
+        marginLeft: "auto",
     },
     recvLocation: {
         borderRadius: 3,
@@ -746,5 +789,35 @@ const styles = StyleSheet.create({
         shadowRadius: 5,
         paddingHorizontal: 8,
         paddingVertical: 5,
+    },
+    linkListStyle: {
+        flexDirection: "row",
+        justifyContent: "center",
+        alignItems: "center",
+        textAlign: "center", 
+        fontSize: 19, 
+        width: "70%", 
+        marginLeft: "auto", 
+        marginRight: "auto", 
+        borderColor: "teal", 
+        borderWidth: 4,
+        borderColor: "teal",
+        borderRadius: 15,
+        backgroundColor: "black",
+        paddingVertical: 3
+    },
+    cardStyle: {
+        padding: 10, 
+        margin: 10, 
+        elevation: 7, 
+        // backgroundColor: "teal", 
+        cornerRadius: 30,
+        // width: "90%",
+        marginLeft: "auto",
+        marginRight: "auto",
+    },
+    linkListText: {
+        color: "black",
+        textAlign: "center"
     }
 })

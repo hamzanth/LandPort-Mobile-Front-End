@@ -6,6 +6,7 @@ import { PaperProvider, BottomNavigation, Text } from 'react-native-paper'
 import RidersDashHome from './ridersTabScreens/ridersDashHome'
 import RidersDashTrans from './ridersTabScreens/ridersDashTrans'
 import RidersDashProfile from './ridersTabScreens/ridersDashProfile'
+import RidersDashRider from './ridersTabScreens/ridersDashRider'
 
 
 export default function RidersDashboard (){
@@ -14,7 +15,8 @@ export default function RidersDashboard (){
     const [ index, setIndex ] = useState(0)
     const [ routes, setRoutes ] = useState([
         {key: "home", title: "Home", focusedIcon: "home"},
-        {key: "transaction", title: "Transactions", focusedIcon: "history"},
+        {key: "riders", title: "Riders", focusedIcon: "heart"},
+        {key: "location", title: "Location", focusedIcon: "history"},
         {key: "profile", title: "Profile", focusedIcon: "account"},
     ])
 
@@ -23,7 +25,7 @@ export default function RidersDashboard (){
             const token = await AsyncStorage.getItem("userToken")
             try{
                 const decData = jwtDecode(token)
-                await fetch("http://192.168.43.207:3000/users/" + decData.id)
+                await fetch("http://192.168.43.75:3000/users/" + decData.id)
                 .then(resp => resp.json())
                 .then(data => {
                     setUser(data.user)
@@ -40,25 +42,27 @@ export default function RidersDashboard (){
         fetchData()
     }, [])
 
+    // const renderScene = BottomNavigation.SceneMap({
+    //     home: (props) => <RidersDashHome {...props} user={user} />,
+    //     profile: (props) => <RidersDashProfile {...props} user={user} />,
+    //     transaction: (props) => <RidersDashTrans {...props} user={user} />,
+    // })
     const renderScene = BottomNavigation.SceneMap({
-        home: (props) => <RidersDashHome {...props} user={user} />,
-        profile: (props) => <RidersDashProfile {...props} user={user} />,
-        transaction: (props) => <RidersDashTrans {...props} user={user} />,
+        home: RidersDashHome,
+        riders: RidersDashRider,
+        profile: RidersDashProfile,
+        location: (props) => <RidersDashTrans {...props} />,
     })
 
     return (
         <PaperProvider>
-            {loading ? (
-                <View style={{flex: 1, justifyContent: "center", alignItems: "center"}}>
-                    <Text variant="displayMedium">Loading...</Text>
-                </View>
-            ) : (
-                <BottomNavigation 
-                    navigationState={{index, routes}}
-                    onIndexChange={setIndex}
-                    renderScene={renderScene}
-                />
-            )}
+            
+            <BottomNavigation 
+                navigationState={{index, routes}}
+                onIndexChange={setIndex}
+                renderScene={renderScene}
+            />
+            
         </PaperProvider>
     )
 }
