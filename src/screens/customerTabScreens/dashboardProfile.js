@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react'
-import { View, StyleSheet, Image } from 'react-native'
+import { View, StyleSheet, Image, ScrollView } from 'react-native'
 import { Text, Button } from 'react-native-paper'
 import { useNavigation } from '@react-navigation/native'
 import AsyncStorage from '@react-native-async-storage/async-storage'
@@ -7,6 +7,7 @@ import jwtDecode from 'jwt-decode'
 import { ActivityIndicator } from 'react-native-paper'
 import { Entypo } from '@expo/vector-icons'
 import { FontAwesome } from '@expo/vector-icons'
+import { GooglePlacesAutocomplete } from 'react-native-google-places-autocomplete'
 
 export default function DashboardProfileRoute() {
     const [usr, setUsr] = useState(null)
@@ -82,6 +83,43 @@ export default function DashboardProfileRoute() {
                     } >
                     Logout 
                 </Button> 
+                {/* <ScrollView style={{borderColor: "red", borderWidth: 5, width: "100%",}}> */}
+                <GooglePlacesAutocomplete 
+                    placeholder="Search"
+                    onPress={(data, details=null) => {
+                        console.log(data, details)
+                    }}
+                    fetchDetails={true}
+                    GooglePlacesSearchQuery={{
+                        rankby: "distance",
+                    }}
+                    query={{
+                        key: "AIzaSyBCk_9UhZfgEfs1mQu0Trz_CxWO6luEbDg",
+                        // key2: "AIzaSyBCk_9UhZfgEfs1mQu0Trz_CxWO6luEbDg"
+                        language: "en",
+                        // types: "establishment",
+                        // radius: 30000,
+                        // location: `${pin.latitude}, ${pin.longitude}`
+                    }}
+                    nearbyPlacesAPI="GooglePlacesSearch"
+                    styles={{
+                        container: {flex: 0, position: "absolute", top: 130, width: "100%", zIndex: 2000, borderColor: "red", borderWidth: 4},
+                        listView: {backgroundColor: "red"},
+                        predefinedPlacesDescription: {color: "#1faadb"},
+                        listView: {
+                            color: "black",
+                            zIndex: 1000,
+                            position: "absolute",
+                            top: 45,
+                            borderColor: "blue",
+                            borderWidth: 3,
+                            width: "100%",
+                        }
+                    }}
+
+                    // listViewDisplayed={true}
+                />
+            {/* </ScrollView> */}
                 </View>
             )
         } 

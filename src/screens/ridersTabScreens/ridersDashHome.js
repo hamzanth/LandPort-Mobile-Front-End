@@ -26,6 +26,8 @@ export default function RidersDashHome(){
                 .then(resp => resp.json())
                 .then(data => {
                     setUser(data.user)
+                    console.log("The current user is ..")
+                    console.log(data.user)
                     setLoading(false)
                 })
                 .catch(error => {
@@ -35,6 +37,7 @@ export default function RidersDashHome(){
             catch(error){
                 console.log("Something Went Wrong")
             }
+            
         }
         fetchData()
     }, [])
@@ -94,17 +97,17 @@ export default function RidersDashHome(){
                             size={30}
                             iconColor="red"
                             // containerColor="red"
-                            style={{alignSelf:"center", marginTop: 15, borderColor: "red", borderWidth: 4}}
+                            style={{alignSelf:"center", marginTop: 15, marginBottom: 25, borderColor: "red", borderWidth: 4}}
                             onPress={handleTransDetailClose}
                         />
                         <View>
-                            <Text variant="headlineLarge" style={{textAlign: "center", marginVertical: 10, color: "teal", borderWidth: 3, borderColor: "teal"}}>{selectedTrans.refNumber}</Text>
+                        {/* <Text variant="headlineLarge" style={{textAlign: "center", marginVertical: 10, color: "teal", borderWidth: 3, borderColor: "teal"}}>{selectedTrans?.refNumber}</Text> */}
                             <Text variant="bodyLarge" style={{fontWeight: "bold", textAlign: "center", marginBottom: 10, color: "teal"}}>Date: {moment(selectedTrans.dateCreated).calendar()} ({moment(selectedTrans.dateCreated).fromNow()})</Text>
                             <Text variant="bodyLarge" style={{fontWeight: "bold", textAlign: "center", marginBottom: 10, color: "teal"}}>Completed: {selectedTrans.completed ? "True" : "False"} </Text>
                             <Text variant="bodyLarge" style={{fontWeight: "bold", textAlign: "center", marginBottom: 10, color: "teal"}}>Distance: {selectedTrans.distance.toFixed(2)}KM</Text>
                             <Text variant="bodyLarge" style={{fontWeight: "bold", textAlign: "center", marginBottom: 10, color: "teal"}}>Transaction Cost: #{selectedTrans.transactionCost}</Text>
-                            <Text variant="bodyLarge" style={{fontWeight: "bold", textAlign: "center", marginBottom: 10, color: "teal"}}>Sender: {selectedTrans.customer.name} (0{selectedTrans.customer.phoneNumber})</Text>
-                            <Text variant="bodyLarge" style={{fontWeight: "bold", textAlign: "center", marginBottom: 10, color: "teal"}}>Reciever: {selectedTrans.request.recipient.name} (0{selectedTrans.request.recipient.phoneNumber})</Text>
+                            <Text variant="bodyLarge" style={{fontWeight: "bold", textAlign: "center", marginBottom: 10, color: "teal"}}>Sender: {selectedTrans.sender.name} (0{selectedTrans.sender.phoneNumber})</Text>
+                            <Text variant="bodyLarge" style={{fontWeight: "bold", textAlign: "center", marginBottom: 10, color: "teal"}}>Reciever: {selectedTrans.recipient.name} (0{selectedTrans.recipient.phoneNumber})</Text>
                             <Text variant="bodyLarge" style={{fontWeight: "bold", textAlign: "center", marginBottom: 10, color: "teal"}}>Rider's Company: {selectedTrans.riderCompany.name}</Text>
                             
                         </View>
@@ -133,7 +136,7 @@ export default function RidersDashHome(){
                     <View style={{flex: 1}}>
                         <FlatList 
                             keyExtractor={(item) => item._id}
-                            data={user.transactions}
+                            data={user.requests}
                             renderItem={({item}) => (
                                 <Card style={styles.cardStyle}>
                                     <TouchableOpacity onPress={() => {
@@ -143,10 +146,12 @@ export default function RidersDashHome(){
                                         <View style={{flexDirection: "row", alignItems: "center", justifyContent: "space-around"}}>
                                         <Entypo name="cross" size={33} style={{color: "white", backgroundColor: "teal", borderRadius: 50}}/>
                                         <View>
-                                            <Text variant="bodyLarge" style={styles.linkListText}>From {item.request.sender.name} To {item.request.recipient.name} {item.customerConfirm ? <Entypo name="check" size={23}/> : <Entypo name="cog" size={19}/>}</Text>
-                                            <Text variant="bodySmall" style={{textAlign: "center"}}>{moment(item.dateCreated).calendar()} ({moment(item.dateCreated).fromNow()}) </Text>
+                                            {/* <Text variant="bodyLarge" style={styles.linkListText}>From {item.request[0].sender.name} To {item.request[0].recipient.name} {item.customerConfirm ? <Entypo name="check" size={23}/> : <Entypo name="cog" size={19}/>}</Text>
+                                            <Text variant="bodySmall" style={{textAlign: "center"}}>{moment(item.dateCreated).calendar()} ({moment(item.dateCreated).fromNow()}) </Text> */}
+                                            <Text variant="bodyLarge" style={styles.linkListText}>From {item.sender.name} To {item.recipient.name} {item.customerConfirm ? <Entypo name="check" size={23}/> : <Entypo name="cog" size={19}/>}</Text>
+                                            <Text variant="bodySmall">{moment(item.dateCreated).calendar()} ({moment(item.dateCreated).fromNow()}) </Text>
                                         </View>
-                                    </View>
+                                        </View>
                                     </TouchableOpacity>
                                 </Card>
                             )}

@@ -9,6 +9,9 @@ import { Entypo } from '@expo/vector-icons'
 import { FontAwesome } from '@expo/vector-icons'
 import { MaterialIcons } from '@expo/vector-icons'
 import { MotiView, MotiText } from 'moti'
+import * as ImagePicker from 'expo-image-picker'
+import { firebase } from '../../../config'
+import { getStorage, ref, deleteObject } from 'firebase/storage'
 
 export default function RidersDashRider() {
     const [usr, setUsr] = useState(null)
@@ -24,6 +27,66 @@ export default function RidersDashRider() {
     const [ showEditModal, setShowEditModal ] = useState(false)
     const [ editRider, setEditRider ] = useState({})
     const [ selectedRider, setSelectedRider ] = useState({})
+
+    const [ eriderName, setEriderName ] = useState("")
+    const [ eplateNum, setEplateNum ] = useState("")
+    const [ ebikeColor, setEbikeColor ] = useState("")
+
+    const [ image, setImage ] = useState(null)
+    const [ uploading, setUploading ] = useState(false)
+    const [ deleting, setDeleting ] = useState(false)
+    const [ updating, setUpdating ] = useState(false)
+    const [ imageUrl, setImageUrl ] = useState(null)
+
+    const pickImage = async () => {
+        let result = await ImagePicker.launchImageLibraryAsync({
+            mediaTypes: ImagePicker.MediaTypeOptions.All,
+            allowsEditing: true,
+            aspect: [4,3],
+            quality: 1
+        })
+        // console.log(result)
+        if (!result.canceled){
+            const imageUri = result.assets[0].uri
+            // console.log(imageUri)
+            const source = {uri: imageUri}
+            console.log(source)
+            setImage(source)
+        }
+    }
+
+    const uploadImage = async () => {
+        // https://firebasestorage.googleapis.com/v0/b/landport-3bc55.appspot.com/o/75bbe17e-0748-4cd1-a86d-d6eb57848d38.jpeg?alt=media&token=a13f1ad0-b16f-4da2-b20b-2e1ff882095d
+        setUploading(true)
+        const response = await fetch(image.uri)
+        const blob = await response.blob()
+        const filename = image.uri.substring(image.uri.lastIndexOf('/') + 1)
+        let refe = await firebase.storage().ref().child(filename).put(blob)
+        // let refe = await firebase.storage().refFromURL("https://firebasestorage.googleapis.com/v0/b/landport-3bc55.appspot.com/o/75bbe17e-0748-4cd1-a86d-d6eb57848d38.jpeg?alt=media&token=a13f1ad0-b16f-4da2-b20b-2e1ff882095d").put(blob)
+        // console.log(ref)
+        const urifirbase = await firebase.storage().ref(filename).getDownloadURL()
+        setImageUrl(urifirbase)
+        console.log(urifirbase)
+
+        try{
+            await refe
+            console.log(refe)
+        }
+        catch(err){
+            console.log(err)
+        }
+        setUploading(false)
+        alert("Photo uploaded")
+        setImage(null)
+    }
+
+    const handleFirebaseDelete = async () => {
+        // https://firebasestorage.googleapis.com/v0/b/landport-3bc55.appspot.com/o/7c78f7d8-8538-4719-81b3-950b64fa18a6.jpeg?alt=media&token=1b7a4c28-4e95-4479-bbfa-df91e4871d4c
+        const ref = firebase.storage().refFromURL("https://firebasestorage.googleapis.com/v0/b/landport-3bc55.appspot.com/o/7c78f7d8-8538-4719-81b3-950b64fa18a6.jpeg?alt=media&token=1b7a4c28-4e95-4479-bbfa-df91e4871d4c")
+        await deleteObject(ref).then(() => {
+            alert("image deleted from firebase")
+        })
+    }
 
     const navigation = useNavigation()
 
@@ -51,6 +114,9 @@ export default function RidersDashRider() {
     }, [])
 
     const addRider = async () => {
+        setUploading(true)
+        // alert("Photo uploaded")
+        
         if (plateNum.length === 0){
             // alert("The Plate Number cannot be blank")
             setPlateError("The Plate Number cannot be blank")
@@ -81,6 +147,33 @@ export default function RidersDashRider() {
             setColorError("The Bike Color cannot be blank")
         }
         else{
+
+            let urifirbase = ""
+            // console.log(image)
+            // setUploading(false)
+
+            if (image){
+                const response = await fetch(image.uri)
+                const blob = await response.blob()
+                const filename = image.uri.substring(image.uri.lastIndexOf('/') + 1)
+                let refe = await firebase.storage().ref().child(filename).put(blob)
+                urifirbase = await firebase.storage().ref(filename).getDownloadURL()
+                setImageUrl(urifirbase)
+    
+                try{
+                    await refe
+                    console.log(refe)
+                }
+                catch(err){
+                    console.log(err)
+                    alert("Check your network connection and try again")
+                    return
+                }
+            }
+            else{
+                urifirbase = null
+            }
+
             const data = await AsyncStorage.getItem("userToken")
             const decData = jwtDecode(data)
             await fetch("http://192.168.43.75:3000/users/add-rider/" + decData.id, {
@@ -89,26 +182,122 @@ export default function RidersDashRider() {
                 body: JSON.stringify({
                     plateNum: plateNum, 
                     riderName: riderName, 
-                    bikeColor: bikeColor
+                    bikeColor: bikeColor,
+                    riderPic: urifirbase
                 })
             })
             .then(resp => resp.json())
             .then(data => {
                 // setUsr(data.usr)
+                setplateNum("")
+                setRiderName("")
+                setBikeColor("")
+                setUploading(false)
+                setUsr(data.usr)
+                setImage(null)
+                setShowModal(false)
                 alert(data.message)
             })
             .catch(error => {
                 console.log(error)
+                setplateNum("")
+                setRiderName("")
+                setUploading(false)
+                setImage(null)
+                setShowModal(false)
             })
-            setplateNum("")
-            setRiderName("")
-            setShowModal(false)
         }
 
     }
 
-    const handleEditRider = () => {
-        alert("You tried to edit the rider")
+    const handleEditRider = async () => {
+        // alert("You tried to edit the rider")
+        // alert("The rider name is " + riderName)
+        setUpdating(true)
+        // alert("Photo uploaded")
+        
+        if (plateNum.length === 0){
+            // alert("The Plate Number cannot be blank")
+            setPlateError("The Plate Number cannot be blank")
+            if (riderName.length === 0){
+                setNameError("The Rider Name cannot be blank")
+            }
+            if (bikeColor.length === 0){
+                setColorError("The Rider Color cannot be blank")
+            }
+        }
+        else if (plateNum.length !== 8){
+            // alert("The Plate Number must 8 characters in length")
+            setPlateError("The Plate Number must 8 characters in length")
+            if (riderName.length === 0){
+                setNameError("The Rider Name cannot be blank")
+            }
+            if (bikeColor.length === 0){
+                setColorError("The Bike Color cannot be blank")
+            }
+        }
+        else if (riderName.length === 0){
+            setNameError("The Rider Name cannot be blank")
+            if (bikeColor.length === 0){
+                setColorError("The Bike Color cannot be blank")
+            }
+        }
+        else if (bikeColor.length === 0){
+            setColorError("The Bike Color cannot be blank")
+        }
+        else{
+            // alert("the update form is valid")
+            let urifirbase = editRider.imageUrl
+            let refe = null
+            if (image){
+                const response = await fetch(image.uri)
+                const blob = await response.blob()
+                const filename = image.uri.substring(image.uri.lastIndexOf('/') + 1)
+                refe = await firebase.storage().refFromURL(editRider.imageUrl).put(blob)
+                urifirbase = await firebase.storage().refFromURL(editRider.imageUrl).getDownloadURL()
+                console.log(urifirbase)
+            }
+            // setImageUrl(urifirbase)
+
+            try{
+                await refe
+                console.log(refe)
+            }
+            catch(err){
+                console.log(err)
+                alert("Check your network connection and try again")
+                return
+            }
+
+            const data = await AsyncStorage.getItem("userToken")
+            const decData = jwtDecode(data)
+            await fetch("http://192.168.43.75:3000/users/update-rider/" + decData.id + "/" + editRider._id, {
+                method: "PUT",
+                headers: {"Content-Type": "application/json"},
+                body: JSON.stringify({
+                    plateNum: plateNum, 
+                    riderName: riderName, 
+                    bikeColor: bikeColor,
+                    riderPic: urifirbase
+                })
+            })
+            .then(resp => resp.json())
+            .then(data => {
+                setUsr(data.usr)
+                setUpdating(false)
+                setImage(null)
+                setplateNum("")
+                setRiderName("")
+                setShowEditModal(false)
+                alert(data.message)
+            })
+            .catch(error => {
+                console.log(error)
+                setUpdating(false)
+                setImage(null)
+                setShowEditModal(false)
+            })
+        }
     }
 
     const toggleActive = async (riderId) => {
@@ -132,21 +321,29 @@ export default function RidersDashRider() {
         })
     }
 
-    const handleDelete = async (riderId) => {
+    const handleDelete = async (rider) => {
+        setDeleting(true)
         const data = await AsyncStorage.getItem("userToken")
         const decData = jwtDecode(data)
-        await fetch("http://192.168.43.75:3000/users/delete-rider/" + decData.id + "/"+ riderId, {
+        await fetch("http://192.168.43.75:3000/users/delete-rider/" + decData.id + "/"+ rider._id, {
             method: "DELETE",
             headers: {"Content-Type": "application/json"},
         })
         .then(resp => resp.json())
-        .then(data => {
-            setUsr(data.usr)
-            setSelectedRider({})
-            setShowEnterModal(false)
-            // console.log(data.usr)
-            // console.log("location successfully pinned")
-            alert(data.message)
+        .then(async (data) => {
+
+            const ref = await firebase.storage().refFromURL(rider.imageUrl)
+            await deleteObject(ref).then(() => {
+                // alert("image deleted from firebase")
+                setUsr(data.usr)
+                setSelectedRider({})
+                setShowEnterModal(false)
+                // console.log(data.usr)
+                // console.log("location successfully pinned")
+                setDeleting(false)
+                alert(data.message)
+            })
+
         })
         .catch(error => {
             console.log(error)
@@ -156,7 +353,7 @@ export default function RidersDashRider() {
     const handleRiderDelete = () => {
         Alert.alert("Delete Rider", "Are You sure you want to delete This Rider?", [
             {text: "Cancel"},
-            {text: "Yes", onPress: () => handleDelete(selectedRider._id)}
+            {text: "Yes", onPress: () => handleDelete(selectedRider)}
         ])
     }
 
@@ -219,7 +416,7 @@ export default function RidersDashRider() {
                                     />
                                     {/* <View style={{borderRadius: 50, borderColor: "red", borderWidth: 3}}> */}
                                         <Image 
-                                            source = {require("../../assets/mark.jpg")}
+                                            source = {selectedRider.imageUrl ? {uri: selectedRider.imageUrl} : require("../../assets/mark.jpg")}
                                             style = {styles.brandLogo}
                                             resizeMode = "cover" 
                                         />
@@ -294,6 +491,8 @@ export default function RidersDashRider() {
                                             mode = "elevated"
                                             textColor = 'white'
                                             onPress = {handleRiderDelete}
+                                            loading={deleting}
+                                            disabled={deleting}
                                         >
                                             Delete
                                         </Button>
@@ -324,7 +523,17 @@ export default function RidersDashRider() {
                                         iconColor="white"
                                         containerColor="red"
                                         style={{alignSelf:"center", marginTop: 0, position: "absolute", top: 0, right: 0, borderWidth: 2, borderColor: "teal"}}
-                                        onPress={() => setShowEditModal(false)}
+                                        onPress={() => {
+                                            setEditRider({})
+                                            setBikeColor("")
+                                            setRiderName("")
+                                            setplateNum("")
+                                            setImage(null)
+                                            setPlateError("")
+                                            setNameError("")
+                                            setColorError("")
+                                            setShowEditModal(false)
+                                        }}
                                     />
                                     <View>
                                         <Text 
@@ -337,7 +546,7 @@ export default function RidersDashRider() {
                                             style={styles.inputStyle} 
                                             mode="outlined"
                                             label="Enter Plate Number"
-                                            value={editRider.plateNumber}
+                                            value={plateNum}
                                             onChangeText={setplateNum}
                                             onFocus={() => setPlateError(false)}
                                         />
@@ -354,7 +563,7 @@ export default function RidersDashRider() {
                                             style={styles.inputStyle} 
                                             mode="outlined"
                                             label="Enter Rider Name"
-                                            value={editRider.riderName}
+                                            value={riderName}
                                             onChangeText={setRiderName}
                                             onFocus={() => setNameError(false)}
                                         />
@@ -384,6 +593,29 @@ export default function RidersDashRider() {
                                             >
                                                 {colorError}
                                         </Text>
+
+                                        <View style={{flexDirection: "row", justifyContent: "center", marginTop: 18}}>
+                                            <Button 
+                                                style = {[styles.mbstyle, {marginRight: 8, width: "50%"}]}
+                                                rippleColor = "#4caf50"
+                                                buttonColor = 'teal'
+                                                mode = "elevated"
+                                                textColor = 'white'
+                                                onPress = {pickImage}
+                                                icon="camera"
+                                                >
+                                                Pick Image
+                                            </Button> 
+                                            <Image 
+                                                source={{uri: image ? image.uri : editRider.imageUrl ? editRider.imageUrl : null}}
+                                                style={{
+                                                    backgroundColor: "white", 
+                                                    width: 40, 
+                                                    height: 40,
+                                                    borderRadius: 50
+                                                }}
+                                            />
+                                        </View>
                                     </View>
                                     <MotiView
                                         style={{flexDirection: "row", justifyContent: "space-evenly", marginTop: 30}}
@@ -394,8 +626,16 @@ export default function RidersDashRider() {
                                             buttonColor = 'red'
                                             mode = "elevated"
                                             textColor = 'white'
+                                            disabled={uploading}
                                             onPress = {() => {
                                                 setEditRider({})
+                                                setBikeColor("")
+                                                setRiderName("")
+                                                setImage(null)
+                                                setplateNum("")
+                                                setPlateError("")
+                                                setNameError("")
+                                                setColorError("")
                                                 setShowEditModal(false)
                                             }}
                                             >
@@ -408,6 +648,8 @@ export default function RidersDashRider() {
                                             mode = "elevated"
                                             textColor = 'white'
                                             onPress = {handleEditRider}
+                                            disabled={uploading}
+                                            loading={uploading}
                                             >
                                             Update
                                         </Button> 
@@ -418,7 +660,7 @@ export default function RidersDashRider() {
                                 <Modal
                                     visible={showModal}
                                     onDismiss={() => setShowModal(false)}
-                                    contentContainerStyle={{borderColor: "teal", borderWidth: 3, width: "90%", height: "90%", marginLeft: "auto", marginRight: "auto", backgroundColor: "white"}}
+                                    contentContainerStyle={{borderColor: "teal", borderWidth: 3, width: "95%", height: "100%", marginLeft: "auto", marginRight: "auto", backgroundColor: "white"}}
                                 >
                                     <IconButton 
                                         icon="close"
@@ -427,7 +669,15 @@ export default function RidersDashRider() {
                                         iconColor="white"
                                         containerColor="red"
                                         style={{alignSelf:"center", marginTop: 0, position: "absolute", top: 0, right: 0, borderWidth: 2, borderColor: "teal"}}
-                                        onPress={() => setShowModal(false)}
+                                        onPress={() => {
+                                            setplateNum("")
+                                            setRiderName("")
+                                            setImage(null)
+                                            setPlateError("")
+                                            setNameError("")
+                                            setColorError("")
+                                            setShowModal(false)
+                                        }}
                                     />
                                     <View>
                                         <Text 
@@ -487,6 +737,51 @@ export default function RidersDashRider() {
                                             >
                                                 {colorError}
                                         </Text>
+
+                                        {/* <TouchableOpacity onPress={pickImage}> 
+                                            <Text>choose rider Image</Text>
+                                        </TouchableOpacity> */}
+                                        <View style={{flexDirection: "row", justifyContent: "center", marginTop: 18}}>
+                                            <Button 
+                                                style = {[styles.mbstyle, {marginRight: 8, width: "50%"}]}
+                                                rippleColor = "#4caf50"
+                                                buttonColor = 'teal'
+                                                mode = "elevated"
+                                                textColor = 'white'
+                                                onPress = {pickImage}
+                                                icon="camera"
+                                                >
+                                                Pick Image
+                                            </Button> 
+                                            {image && <Image 
+                                                source={{uri: image.uri}}
+                                                style={{
+                                                    backgroundColor: "red", 
+                                                    width: 40, 
+                                                    height: 40,
+                                                    borderRadius: 50
+                                                }}
+                                            />
+                                            }
+                                        </View>
+                                        {/* <View>
+                                            {image && <Image source={require(image.uri)}/>}
+                                            <TouchableOpacity onPress={uploadImage}>
+                                            <Text>Upload Image</Text>
+                                            </TouchableOpacity>
+                                        </View> */}
+
+                                        {/* <Button
+                                            style = {styles.addButton}
+                                            rippleColor = "#4caf50"
+                                            buttonColor = 'teal'
+                                            mode = "elevated"
+                                            textColor = 'white'
+                                            onPress = {handleFirebaseDelete}
+                                        >
+                                            Firebase Delete
+                                        </Button> */}
+
                                     </View>
                                     <MotiView
                                         style={{flexDirection: "row", justifyContent: "space-evenly", marginTop: 30}}
@@ -497,9 +792,11 @@ export default function RidersDashRider() {
                                             buttonColor = 'red'
                                             mode = "elevated"
                                             textColor = 'white'
+                                            disabled={uploading}
                                             onPress = {() => {
                                                 setplateNum("")
                                                 setRiderName("")
+                                                setImage(null)
                                                 setPlateError("")
                                                 setNameError("")
                                                 setColorError("")
@@ -515,6 +812,8 @@ export default function RidersDashRider() {
                                             mode = "elevated"
                                             textColor = 'white'
                                             onPress = {addRider}
+                                            loading={uploading}
+                                            disabled={uploading}
                                             >
                                             Add
                                         </Button> 
@@ -600,6 +899,7 @@ export default function RidersDashRider() {
                                         <TouchableOpacity
                                             onPress={() => {
                                                 // alert("This is supposed to show the enter modal")
+                                                // console.log(item.imageUrl)
                                                 setSelectedRider(item)
                                                 setShowEnterModal(true)
                                             }}
@@ -607,6 +907,9 @@ export default function RidersDashRider() {
                                             onLongPress={()=> {
                                                 setShowEditModal(true)
                                                 setEditRider(item)
+                                                setBikeColor(item.bikeColor)
+                                                setRiderName(item.riderName)
+                                                setplateNum(item.plateNumber)
                                             }}
                                             // onLongPress={()=> alert("This is the long press")}
                                         >
@@ -624,7 +927,16 @@ export default function RidersDashRider() {
                                                 borderRadius: 10
                                                 }}
                                                 >
-                                                <MaterialIcons name={item.available ? 'directions-bike' : "cancel"} color={item.available ? 'teal' : "red"} size={45} />
+                                                {/* <MaterialIcons name={item.available ? 'directions-bike' : "cancel"} color={item.available ? 'teal' : "red"} size={45} /> */}
+                                                <Image 
+                                                    source={item.imageUrl ? {uri: item.imageUrl} : require("../../assets/mark.jpg")}
+                                                    style={{
+                                                        backgroundColor: "white", 
+                                                        width: 60, 
+                                                        height: 60,
+                                                        borderRadius: 50
+                                                    }}
+                                                />
                                                 <View>
                                                     <Text variant="bodySmall"><Text style={{fontWeight: "bold"}}>Rider Name:</Text> {item.riderName}</Text>
                                                     <Text variant="bodySmall"><Text style={{fontWeight: "bold"}}>PlateNumber:</Text> {item.plateNumber}</Text>

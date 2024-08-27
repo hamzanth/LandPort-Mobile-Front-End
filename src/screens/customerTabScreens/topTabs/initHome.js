@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useContext } from 'react'
 import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, View, SafeAreaView, TouchableOpacity, FlatList, Alert, Modal as Lmodal, Image } from 'react-native';
+import { StyleSheet, View, SafeAreaView, TouchableOpacity, FlatList, Alert, Modal as Lmodal, Image, ImageBackground } from 'react-native';
 import { Text, Button, ActivityIndicator, IconButton, Modal, Portal, PaperProvider } from 'react-native-paper'
 // import { useNavigation } from '@react-navigation/native'
 import Ionicons from '@expo/vector-icons/Ionicons'
@@ -20,10 +20,10 @@ export default function InitHome({navigation}){
     const transData = useContext(TransContext)
 
     const dropDownData = [
-        {title: "single", icon: "arrow-right"}, 
-        {title: "mass", icon: "home"}, 
-        {title: "shared", icon: "cog"}, 
-        {title: "global", icon: "heart"}
+        {title: "Single", icon: "arrow-bold-up"}, 
+        {title: "Mass", icon: "hair-cross"},  
+        {title: "Shared", icon: "cog"}, 
+        {title: "Global", icon: "heart"}
         ]
 
     const [ loading, setLoading ] = useState(true)
@@ -37,14 +37,13 @@ export default function InitHome({navigation}){
         const fetchData = async () => {
 
             const data = await AsyncStorage.getItem("userToken")
-            console.log(data)
             try{
                 const decData = jwtDecode(data)
                 await fetch("http://192.168.43.75:3000/users/" + decData.id)
                 .then(resp => resp.json())
                 .then(data => {
-                    console.log(data)
                     setUsr(data.user)
+                    transData.setCustomer(data.user)
                     setLoading(false)
                 })
                 .catch(error => {
@@ -81,7 +80,7 @@ export default function InitHome({navigation}){
 
     return(
         <PaperProvider>
-
+            
             <View style={styles.container}>
                 {loading ? (
                     <View style={{flex: 1, alignItems: "center", justifyContent: "center"}}>
@@ -93,33 +92,60 @@ export default function InitHome({navigation}){
                         <Modal
                             visible={showBookModal}
                             onDismiss={() => setShowBookModal(false)}
-                            contentContainerStyle={{borderColor: "teal", borderWidth: 3, marginLeft: "auto", marginRight: "auto", marginTop: -30, backgroundColor: "white"}}
+                            contentContainerStyle={{borderColor: "teal", borderWidth: 3, marginLeft: "auto", marginRight: "auto", marginTop: -30, backgroundColor: "white", borderRadius: 15}}
                         >
                             <View style={{paddingVertical: 5}}>
-                                <Text style={{fontSize: 20, marginBottom: 12, paddingHorizontal: 10}}>Select the type of Ride</Text>
+                                <Text style={{fontSize: 20, marginBottom: 12, textAlign: "center", paddingHorizontal: 10, fontWeight: "bold"}}>Select the type of Ride</Text>
                                 <FlatList 
                                     keyExtractor={(item) => item.title}
                                     data={dropDownData}
                                     renderItem={({item}) => (
-                                        <View>
-                                            <TouchableOpacity
+                                        <TouchableOpacity
                                                 onPress={() => {
                                                     transData.setRideType(item.title)
                                                     navigation.navigate("Sender")
+                                                    setShowBookModal(false)
                                                 }}
                                             >
-                                                <Text
+                                        {/* <Card
+                                            style={{
+                                                flexDirection: "row", 
+                                                justifyContent: "center",
+                                                marginBottom: item.title === "Global" ? 0 : 7,
+                                                // borderColor: "red",
+                                                borderWidth: 3,
+                                                backgroundColor: "white"
+                                            }}
+                                        > */}
+                                            
+                                                <View 
                                                     style={{
-                                                        fontSize: 20,
-                                                        textAlign: "center",
-                                                        // borderBottomWidth: 1,
-                                                        marginBottom: 6 
-                                                    }}
+                                                        flexDirection: "row", 
+                                                        justifyContent: "space-evenly",
+                                                        marginBottom: item.title === "Global" ? 0 : 10, 
+                                                        borderBottomWidth: item.title === "Global" ? 0 : 0, 
+                                                        backgroundColor: "lightgrey",
+                                                        marginHorizontal: 6,
+                                                        borderRadius: 6,
+                                                        paddingVertical: 6
+                                                }}
                                                 >
-                                                    {item.title}
-                                                </Text>
+                                                    <View style={{backgroundColor: "teal", borderRadius: 50, justifyContent: "center", alignItems: "center", marginRight: 30}}>
+                                                        <Entypo name={item.icon} size={32} style={{color: "white"}}/>
+                                                    </View>
+                                                    <Text
+                                                        style={{
+                                                            fontSize: 20,
+                                                            textAlign: "center",
+                                                            // borderBottomWidth: 1,
+                                                            // marginBottom: 6 
+                                                        }}
+                                                    >
+                                                        {item.title}
+                                                    </Text>
+                                                </View>
+                                        {/* </Card> */}
                                             </TouchableOpacity>
-                                        </View>
                                     )}
                                 />
                             </View>
@@ -156,10 +182,155 @@ export default function InitHome({navigation}){
                                 onPress={handleTransDetailClose}
                             />
                             
-                            <View>
+                            <View style={{flex: 1}}>
                                 {selectedTrans && (
-                                    <View>
-                                        <Image 
+                                    <View style={{flex: 1}}>
+                                        <Text variant="headlineLarge" style={{textAlign: "center", marginVertical: 10, color: "white", borderWidth: 0.5, backgroundColor: "teal"}}>{selectedTrans.refNumber}</Text>
+                                        <View 
+                                        style={{
+                                            flexDirection: "row",
+                                            justifyContent: "space-between",
+                                            width: "80%",
+                                            marginRight: "auto",
+                                            marginLeft: "auto",
+                                        }}
+                                        >
+                                            <Text variant="bodyLarge" style={[{width: "45%", textAlign: "left"}, styles.transDetStyle]}>Date:</Text> 
+                                            <Text style={[styles.transDetStyle, {textAlign: "left", width: "55%", color: "gray"}]}>{moment(selectedTrans.dateCreated).calendar()} ({moment(selectedTrans.dateCreated).fromNow()})</Text>
+                                        </View>
+                                        <View 
+                                        style={{
+                                            flexDirection: "row",
+                                            justifyContent: "space-between",
+                                            width: "80%",
+                                            marginRight: "auto",
+                                            marginLeft: "auto",
+                                        }}
+                                        >
+                                            <Text variant="bodyLarge" style={[{width: "45%", textAlign: "left"},styles.transDetStyle]}>Completed:</Text> 
+                                            <Text style={[styles.transDetStyle, {textAlign: "left", width: "55%", color: "gray"}]}>{selectedTrans.completed ? "True" : "False"}</Text>
+                                        </View>
+                                        <View 
+                                        style={{
+                                            flexDirection: "row",
+                                            justifyContent: "space-between",
+                                            width: "80%",
+                                            marginRight: "auto",
+                                            marginLeft: "auto",
+                                        }}
+                                        >
+                                            <Text variant="bodyLarge" style={[{width: "45%", textAlign: "left"},styles.transDetStyle]}>Customer:</Text> 
+                                            <Text style={[styles.transDetStyle, {textAlign: "left", width: "55%", color: "gray"}]}>{selectedTrans.customer?.name} (0{selectedTrans.customer?.phoneNumber})</Text>
+                                        </View>
+                                        <FlatList 
+                                            keyExtractor={item => item._id}
+                                            data={selectedTrans.request}
+                                            renderItem={({item}) => (
+                                                <Card 
+                                                    style={{
+                                                        // borderColor: "cornflowerblue", 
+                                                        paddingVertical: 3, 
+                                                        // borderWidth: 1, 
+                                                        marginBottom: 25,
+                                                        // marginLeft: "auto",
+                                                        // marginRight: "auto",
+                                                        width: "100%"
+                                                        }}
+                                                >
+                                                    <Image 
+                                                        source = {require("../../../assets/mark.jpg")}
+                                                        style = {styles.brandLogo}
+                                                        resizeMode = "cover" 
+                                                    />
+
+                                                    <View 
+                                                    style={{
+                                                        flexDirection: "row",
+                                                        justifyContent: "space-between",
+                                                        width: "80%",
+                                                        marginRight: "auto",
+                                                        marginLeft: "auto",
+                                                    }}
+                                                    >
+                                                        <Text variant="bodyLarge" style={[{width: "45%", textAlign: "left"},styles.transDetStyle]}>Distance:</Text> 
+                                                        <Text style={[styles.transDetStyle, {textAlign: "left", width: "55%", color: "gray"}]}>{item.distance?.toFixed(2)}KM</Text>
+                                                    </View>
+                                                    <View 
+                                                    style={{
+                                                        flexDirection: "row",
+                                                        justifyContent: "space-between",
+                                                        width: "80%",
+                                                        marginRight: "auto",
+                                                        marginLeft: "auto",
+                                                    }}
+                                                    >
+                                                        <Text variant="bodyLarge" style={[{width: "45%", textAlign: "left"},styles.transDetStyle]}>Transaction Cost:</Text> 
+                                                        <Text style={[styles.transDetStyle, {textAlign: "left", width: "55%", color: "gray"}]}>{item.transactionCost}</Text>
+                                                    </View>
+                                                    <View 
+                                                    style={{
+                                                        flexDirection: "row",
+                                                        justifyContent: "space-between",
+                                                        width: "80%",
+                                                        marginRight: "auto",
+                                                        marginLeft: "auto",
+                                                    }}
+                                                    >
+                                                        <Text variant="bodyLarge" style={[{width: "45%", textAlign: "left"},styles.transDetStyle]}>Sender:</Text> 
+                                                        <Text style={[styles.transDetStyle, {textAlign: "left", width: "55%", color: "gray"}]}>{item.sender.name} (0{selectedTrans.customer?.phoneNumber})</Text>
+                                                    </View>
+                                                    <View 
+                                                    style={{
+                                                        flexDirection: "row",
+                                                        justifyContent: "space-between",
+                                                        width: "80%",
+                                                        marginRight: "auto",
+                                                        marginLeft: "auto",
+                                                    }}
+                                                    >
+                                                        <Text variant="bodyLarge" style={[{width: "45%", textAlign: "left"},styles.transDetStyle]}>Reciever:</Text> 
+                                                        <Text style={[styles.transDetStyle, {textAlign: "left", width: "55%", color: "gray"}]}>{item.recipient.name} (0{item.recipient.phoneNumber})</Text>
+                                                    </View>
+                                                    <View 
+                                                    style={{
+                                                        flexDirection: "row",
+                                                        justifyContent: "space-between",
+                                                        width: "80%",
+                                                        marginRight: "auto",
+                                                        marginLeft: "auto",
+                                                    }}
+                                                    >
+                                                        <Text variant="bodyLarge" style={[{width: "45%", textAlign: "left"},styles.transDetStyle]}>Rider's Company:</Text> 
+                                                        <Text style={[styles.transDetStyle, {textAlign: "left", width: "55%", color: "gray"}]}>{item.riderCompany?.name}</Text>
+                                                    </View>
+                                                    <View 
+                                                    style={{
+                                                        flexDirection: "row",
+                                                        justifyContent: "space-between",
+                                                        width: "80%",
+                                                        marginRight: "auto",
+                                                        marginLeft: "auto",
+                                                    }}
+                                                    >
+                                                        <Text variant="bodyLarge" style={[{width: "45%", textAlign: "left"},styles.transDetStyle]}>Product:</Text> 
+                                                        <Text style={[styles.transDetStyle, {textAlign: "left", width: "55%", color: "gray"}]}>{item.product.name}({item.product.quantity})</Text>
+                                                    </View>
+                                                    {/* <Text variant="bodyLarge" style={styles.transDetStyle}>Distance: {item.distance?.toFixed(2)}KM</Text>
+
+                                                    <Text variant="bodyLarge" style={styles.transDetStyle}>Transaction Cost: #{item.transactionCost}</Text>
+                                                    
+                                                    <Text variant="bodyLarge" style={styles.transDetStyle}>Sender: {item.sender.name} (0{selectedTrans.customer?.phoneNumber})</Text>
+
+                                                    <Text variant="bodyLarge" style={styles.transDetStyle}>Reciever: {item.recipient.name} (0{item.recipient.phoneNumber})</Text>
+
+                                                    <Text variant="bodyLarge" style={styles.transDetStyle}>Rider's Company: {item.riderCompany?.name}</Text>
+
+                                                    <Text variant="bodyLarge" style={styles.transDetStyle}>Product: {item.product.name}({item.product.quantity})</Text> */}
+                                                </Card>
+                                            )}
+                                        />
+
+                                        {/* <Image 
                                             source = {require("../../../assets/mark.jpg")}
                                             style = {styles.brandLogo}
                                             resizeMode = "cover" 
@@ -174,22 +345,24 @@ export default function InitHome({navigation}){
                                         <Text variant="bodyLarge" style={{fontWeight: "bold", textAlign: "center", marginBottom: 10, color: "teal"}}>Sender: {selectedTrans.request[0].sender.name} (0{selectedTrans.customer?.phoneNumber})</Text>
                                         <Text variant="bodyLarge" style={{fontWeight: "bold", textAlign: "center", marginBottom: 10, color: "teal"}}>Reciever: {selectedTrans.request[0].recipient.name} (0{selectedTrans.request[0].recipient.phoneNumber})</Text>
                                         <Text variant="bodyLarge" style={{fontWeight: "bold", textAlign: "center", marginBottom: 10, color: "teal"}}>Rider's Company: {selectedTrans.riderCompany?.name}</Text>
-                                        <Text variant="bodyLarge" style={{fontWeight: "bold", textAlign: "center", marginBottom: 10, color: "teal"}}>Product: {selectedTrans.request[0].product.name}({selectedTrans.request[0].product.quantity})</Text>
+                                        <Text variant="bodyLarge" style={{fontWeight: "bold", textAlign: "center", marginBottom: 10, color: "teal"}}>Product: {selectedTrans.request[0].product.name}({selectedTrans.request[0].product.quantity})</Text> */}
                                     </View>
                                 )}
                                 
                                 
                             </View>
-                            <View style={{marginTop: 30}}>
+                            <View  style={{marginBottom: 20}}>
                                 <Button 
                                     style={styles.confirmButton}
                                     mode="contained"
                                     rippleColor="#4caf50"
                                     icon="check"
-                                    buttonColor="teal"
+                                    buttonColor="red"
                                     textColor="white"
-                                    onPress={() => handleConfirmButton(selectedTrans)}
-                                    disabled={usr.riderConfirm ? true : false}
+                                    // onPress={() => handleConfirmButton(selectedTrans)}
+                                    onPress={() => alert("confirmed!!!")}
+                                    // disabled={usr.riderConfirm ? true : false}
+                                    disabled={true}
                                 >
                                     Confirm
                                 </Button>
@@ -197,8 +370,37 @@ export default function InitHome({navigation}){
                         </View>
                     </Lmodal>
 
-                    <View style={styles.linkView}>
-                        <Text variant="headlineMedium" style={styles.header}>Welcome {usr && usr.name}</Text>
+                        <ImageBackground
+                            source={require("../../../assets/rider2.jpeg")}
+                        >
+                    <View style={{}}>
+                            <Text 
+                                variant="titleMedium" 
+                                style={{
+                                    textAlign: "left",
+                                    color: "white",
+                                    fontWeight: "bold",
+                                    width: 350,
+                                    marginLeft: 60,
+                                    marginTop: 12
+                                }}
+                            >
+                                Welcome <Text variant="titleLarge" style={{fontWeight: 500, color: "white", fontWeight: "bold"}}>{usr && usr.name}</Text>
+                            </Text>
+                            <Text 
+                                variant="headlineSmall" 
+                                style={{
+                                    textAlign: "left",
+                                    fontWeight: "bold",
+                                    color: "white",
+                                    width: 350,
+                                    marginLeft: 60
+                                }}
+                            >
+                                Book A Dispatch...
+                            </Text>
+
+                        
                     </View>
                     <Button
                         textColor="white"
@@ -206,11 +408,13 @@ export default function InitHome({navigation}){
                         mode="contained"
                         rippleColor="#4caf50"
                         style={styles.mrButton}
+                        icon="bike"
+                        contentStyle={{flexDirection: "row-reverse"}}
                         onPress={() => setShowBookModal(true)}
                     >
-                        Book A Ride
+                        Book Dispatch
                     </Button>
-                    
+                    </ImageBackground>
 
                     {/* <Dropdown 
                         label="Book A Rider"
@@ -218,7 +422,19 @@ export default function InitHome({navigation}){
                     /> */}
 
                     <View style={{flex: 1}}>
-                        <Text variant="headlineMedium" style={{textAlign: "center", color: "teal"}}>Recent Links</Text>
+                        <Text 
+                            variant="titleMedium" 
+                            style={{
+                                textAlign: "left", 
+                                fontWeight: "bold", 
+                                color: "black", 
+                                marginBottom: 15,
+                                marginTop: 15,
+                                marginLeft: 10
+                            }}
+                        >
+                            Recent Links
+                        </Text>
                         <FlatList 
                             keyExtractor={(item) => item._id}
                             data={usr.transactions}
@@ -226,15 +442,38 @@ export default function InitHome({navigation}){
                             
                                 <Card style={styles.cardStyle}>
                                     <TouchableOpacity onPress={() => {
+                                        console.log(item)
                                         setSelectedTrans(item)
                                         // console.log(item.request.length)
                                         setShowTransDetail(true)
                                     }}>
-                                        <View style={{flexDirection: "row", alignItems: "center", justifyContent: "space-around"}}>
-                                            <Entypo name="cross" size={33} style={{color: "white", backgroundColor: "teal", borderRadius: 50}}/>
-                                            <View>
-                                                <Text variant="bodyLarge" style={styles.linkListText}>From {item.request[0].sender.name} To {item.request[0].recipient.name} {item.customerConfirm ? <Entypo name="check" size={23}/> : <Entypo name="cog" size={19}/>}</Text>
-                                                <Text variant="bodySmall">{moment(item.dateCreated).calendar()} ({moment(item.dateCreated).fromNow()}) </Text>
+                                        <View 
+                                            style={{
+                                                flexDirection: "row", 
+                                                alignItems: "center", 
+                                                justifyContent: "space-around", 
+                                                // backgroundColor: "gray",
+                                                // borderRadius: 40
+                                                }}
+                                                >
+                                            <View style={{ width: "20%" }}>
+                                                {/* <Entypo name={item.request.length === 1 ? "arrow-bold-up" : "hair-cross"} size={39} style={{color: "gray", backgroundColor: "white", borderRadius: 50, width: "64%"}}/> */}
+                                                <Image 
+                                                    source={require("../../../assets/rideicon2.jpeg")}
+                                                    style={{
+                                                        width: 40,
+                                                        height: 40,
+                                                        borderRadius: 50
+                                                    }} 
+                                                />
+                                            </View>
+                                            <View style={{ width: "80%" }}>
+                                                {item.request.length === 1 ? (
+                                                    <Text variant="bodyMedium" style={styles.linkListText}>From {item.request[0].sender.name} To {item.request[0].recipient.name}</Text>
+                                                ) : (
+                                                    <Text variant="bodyLarge" style={styles.linkListText}>Mass Dispatch from {item.request[0].sender.name}</Text>
+                                                )}
+                                                <Text variant="bodySmall" style={{textAlign: "left", color: "gray"}}>{moment(item.dateCreated).calendar()} ({moment(item.dateCreated).fromNow()}) </Text>
                                             </View>
                                         </View>
                                     </TouchableOpacity>
@@ -249,6 +488,7 @@ export default function InitHome({navigation}){
         </PaperProvider>
     )
 }
+// {item.customerConfirm ? <Entypo name="check" size={23}/> : <Entypo name="cog" size={19}/>}
 
 const styles = StyleSheet.create({
     container: {
@@ -262,9 +502,13 @@ const styles = StyleSheet.create({
         alignItems: "center"
     },
     header: {
-        // textAlign: "center",
+        textAlign: "left",
         fontWeight: "bold",
         color: "teal",
+        borderColor: "blue",
+        borderWidth: 3,
+        width: "100%",
+        marginHorizontal: 20
     },
     modalStyles: {
         backgroundColor: "white", 
@@ -284,13 +528,16 @@ const styles = StyleSheet.create({
         alignSelf: "center"
     },
     mrButton: {
-        // width: 150,
+        width: 150,
         // paddingVertical: 0,
         // paddingHorizontal: 0,
         // position: "absolute",
         // top: 140,
         borderRadius: 5,
-        marginVertical: 40
+        marginBottom: 30,
+        marginTop: 25,
+        marginRight: "auto",
+        marginLeft: "auto",
     },
     navButtons: {
         flexDirection: "row",
@@ -322,6 +569,7 @@ const styles = StyleSheet.create({
         height: "100%",
         backgroundColor: "white",
         zIndex: 30,
+        flex: 1,
         // borderColor: "blue",
         // borderWidth: 3
     },
@@ -382,21 +630,23 @@ const styles = StyleSheet.create({
         paddingVertical: 3
     },
     cardStyle: {
-        padding: 3, 
-        margin: 10, 
-        elevation: 7, 
+        padding: 7, 
+        margin: 5, 
+        // elevation: 7, 
         // borderColor: "teal",
         // borderWidth: 3,
         // backgroundColor: "teal", 
-        cornerRadius: 30,
+        // cornerRadius: 30,
+        borderRadius: 30,
         // width: "100%",
         // marginLeft: "auto",
         // marginRight: "auto",
     },
     linkListText: {
         color: "black",
-        textAlign: "center",
-        fontWeight: "bold"
+        textAlign: "left",
+        fontWeight: "bold",
+        // fontSize: 24
     },
     btnStyle: {
         
@@ -454,5 +704,12 @@ const styles = StyleSheet.create({
     dropdownItemIconStyle: {
         fontSize: 28,
         marginRight: 8
+    },
+    transDetStyle: {
+        fontWeight: "bold", 
+        // textAlign: "center", 
+        marginBottom: 10, 
+        color: "black",
+        fontWeight: "bold"
     }
 })

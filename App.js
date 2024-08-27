@@ -1,6 +1,6 @@
 // import { StatusBar } from 'expo-status-bar';
 // import { StyleSheet, Text, View } from 'react-native';
-import React, { useEffect } from 'react'
+import React, { useEffect, useState } from 'react'
 import 'react-native-gesture-handler'
 import { NavigationContainer } from '@react-navigation/native'
 import { View, Text, StyleSheet, ImageBackground, Alert } from 'react-native'
@@ -16,6 +16,9 @@ import TransProvider from './transactionContext'
 
 import messaging from '@react-native-firebase/messaging'
 import CustomerDashboard from './src/screens/customerDashboardScreen'
+import SplashScreen from './SplashScreen'
+import registerNNPushToken from 'native-notify';
+import getPushDataObject from 'native-notify'
 
 const requestUserPermission = async () => {
   const authStatus = await messaging().requestPermission()
@@ -26,6 +29,22 @@ const requestUserPermission = async () => {
   }
 }
 
+// const [ isDisplaySplash, setIsDisplaySplash ] = useState(true)
+  // const navigation = useNavigation()
+  // useEffect(() => {
+  //   async function prepare(){
+  //     try {
+  //       await SplashScreen.preventAutoHideAsync();
+  //     } catch (e) {
+  //       await SplashScreen.hideAsync();
+  //     } finally{
+
+  //     }
+  //   }
+
+  //   prepare()
+  // }, [])
+  
 // useEffect(()=> {
 //   if(requestUserPermission()){
 //     messaging().getToken().then(token => {
@@ -120,9 +139,9 @@ function StackNavigator(){
         component={CustomerDashboard} 
         options={{
           title: "Customer Dashboard",
-          headerTitleStyle: {alignSelf: "center", fontWeight: "bold"},
+          headerTitleStyle: {alignSelf: "center", fontWeight: "bold", color: "teal"},
           headerTitleAlign: "center",
-          headerStyle: {backgroundColor: "#d4d4d4", height: 80}
+          headerStyle: {backgroundColor: "white", height: 80}
         }}
         />
       <Stack.Screen 
@@ -149,12 +168,27 @@ function StackNavigator(){
   )
 }
 export default function App(){
+  registerNNPushToken(22999, 'YgZlzpD20yIbAlsoL7PUeD');
+  const [ isDisplaySplash, setIsDisplaySplash ] = useState(true)
+  let pushDataObject = getPushDataObject()
+  useEffect(() => {
+    console.log(pushDataObject)
+    setTimeout(()=> {
+      setIsDisplaySplash(false)
+    }, 3000)
+  }, [pushDataObject])
+
+  if(isDisplaySplash){
+    return(
+      <SplashScreen />
+    )
+  }
   return (
-    <TransProvider>
-      <NavigationContainer>
-        <StackNavigator />
-      </NavigationContainer>
-    </TransProvider>
+      <TransProvider>
+        <NavigationContainer>
+          <StackNavigator />
+        </NavigationContainer>
+      </TransProvider>
   )
 }
 

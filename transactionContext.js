@@ -12,6 +12,8 @@ export default TransProvider = ({children}) => {
     const [ productName, setProductName ] = useState("")
     const [ productQuantity, setProductQuantity ] = useState("")
     const [ productImage, setProductImage ] = useState("")
+    const [ customer, setCustomer ] = useState({})
+    const [ recieverDetails, setRecieverDetails ] = useState([{recieverName: "", recieverPhoneNumber: "", location: null}])
     
     const [ rideType, setRideType ] = useState("Single")
 
@@ -37,7 +39,11 @@ export default TransProvider = ({children}) => {
                 productImage,
                 setProductImage,
                 rideType,
-                setRideType
+                setRideType,
+                customer,
+                setCustomer,
+                recieverDetails,
+                setRecieverDetails
             }}
         >
             {children}

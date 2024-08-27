@@ -1,3 +1,4 @@
+import React, { useEffect, useState } from 'react' 
 import { StatusBar } from 'expo-status-bar';
 import { StyleSheet, Text, View, SafeAreaView, TouchableOpacity, Image } from 'react-native';
 // import { useNavigation } from '@react-navigation/native'
@@ -5,10 +6,12 @@ import Ionicons from '@expo/vector-icons/Ionicons'
 import { MaterialCommunityIcons } from '@expo/vector-icons'
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import jwtDecode from 'jwt-decode';
+import * as SplashScreen from "expo-splash-screen"
+import { Notification } from 'expo-notifications'
 
 
 export default function HomeScreen({ navigation }) {
-  // const navigation = useNavigation()
+  
   const handlePress = async () => {
     // console.log("Custom Button Pressed")
     const token = await AsyncStorage.getItem("userToken")
