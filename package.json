@@ -19,12 +19,13 @@
     "@react-navigation/material-top-tabs": "^6.6.13",
     "@react-navigation/native": "^6.1.8",
     "@react-navigation/stack": "^6.3.18",
-    "expo": "^51.0.0",
-    "expo-dev-client": "~4.0.23",
-    "expo-firebase-core": "^6.0.0",
+    "expo": "^51.0.31",
+    "expo-constants": "~16.0.2",
+    "expo-dev-client": "~4.0.25",
+    "expo-device": "~6.0.2",
     "expo-image-picker": "~15.0.7",
     "expo-location": "~17.0.1",
-    "expo-notifications": "~0.28.15",
+    "expo-notifications": "~0.28.16",
     "expo-splash-screen": "~0.27.5",
     "expo-status-bar": "~1.12.1",
     "firebase": "^9.6.11",
@@ -32,7 +33,7 @@
     "moment": "^2.29.4",
     "moti": "^0.28.1",
     "native-notify": "^4.0.4",
-    "react": "^18.2.0",
+    "react": "18.2.0",
     "react-native": "0.74.5",
     "react-native-drop-shadow": "^1.0.0",
     "react-native-dropdown-picker": "^5.4.6",
@@ -50,9 +51,7 @@
     "react-native-select-dropdown": "^4.0.1",
     "react-native-shadow-card": "^1.0.1",
     "react-native-shadow-cards": "^1.0.2",
-    "react-native-tab-view": "^3.5.2",
-    "expo-device": "~6.0.2",
-    "expo-constants": "~16.0.2"
+    "react-native-tab-view": "^3.5.2"
   },
   "devDependencies": {
     "@babel/core": "^7.24.0"

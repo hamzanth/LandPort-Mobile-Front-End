@@ -170,13 +170,13 @@ function StackNavigator(){
 export default function App(){
   registerNNPushToken(22999, 'YgZlzpD20yIbAlsoL7PUeD');
   const [ isDisplaySplash, setIsDisplaySplash ] = useState(true)
-  let pushDataObject = getPushDataObject()
+  // let pushDataObject = getPushDataObject()
   useEffect(() => {
-    console.log(pushDataObject)
+    // console.log(pushDataObject)
     setTimeout(()=> {
       setIsDisplaySplash(false)
     }, 3000)
-  }, [pushDataObject])
+  }, [])
 
   if(isDisplaySplash){
     return(
